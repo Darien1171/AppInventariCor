@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AppInventariCor.Views.DashboardPage"
+             Title="Dashboard">
+
+    <ScrollView>
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" Padding="16" RowSpacing="20">
+            <!-- Encabezado -->
+            <StackLayout Grid.Row="0" Orientation="Horizontal" Spacing="10">
+                <Label Text="Dashboard" FontSize="24" FontAttributes="Bold" VerticalOptions="Center" />
+            </StackLayout>
+
+            <!-- KPIs principales -->
+            <Grid Grid.Row="1" ColumnDefinitions="*,*" RowDefinitions="*,*" ColumnSpacing="10" RowSpacing="10">
+                <Frame BorderColor="{StaticResource Gray200}" CornerRadius="8" Padding="16" Margin="2">
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+                        <Label Grid.Column="1" Text="Total Repuestos" FontSize="14" TextColor="{StaticResource Gray500}" />
+                        <StackLayout Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
+                            <Label Text="358" FontSize="18" FontAttributes="Bold" />
+                            <Label Text="items" FontSize="14" TextColor="{StaticResource Gray500}" VerticalOptions="End" />
+                        </StackLayout>
+                    </Grid>
+                </Frame>
+
+                <Frame Grid.Column="1" BorderColor="{StaticResource Gray200}" CornerRadius="8" Padding="16" Margin="2">
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+                        <Label Grid.Column="1" Text="Valor Inventario" FontSize="14" TextColor="{StaticResource Gray500}" />
+                        <StackLayout Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
+                            <Label Text="$45,789.00" FontSize="18" FontAttributes="Bold" />
+                        </StackLayout>
+                    </Grid>
+                </Frame>
+
+                <Frame Grid.Row="1" BorderColor="{StaticResource Gray200}" CornerRadius="8" Padding="16" Margin="2">
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+                        <Label Grid.Column="1" Text="Alertas Stock" FontSize="14" TextColor="{StaticResource Gray500}" />
+                        <StackLayout Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
+                            <Label Text="12" FontSize="18" FontAttributes="Bold" TextColor="Orange" />
+                            <Label Text="items" FontSize="14" TextColor="{StaticResource Gray500}" VerticalOptions="End" />
+                        </StackLayout>
+                    </Grid>
+                </Frame>
+
+                <Frame Grid.Row="1" Grid.Column="1" BorderColor="{StaticResource Gray200}" CornerRadius="8" Padding="16" Margin="2">
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+                        <Label Grid.Column="1" Text="Vehículos" FontSize="14" TextColor="{StaticResource Gray500}" />
+                        <StackLayout Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
+                            <Label Text="27" FontSize="18" FontAttributes="Bold" />
+                            <Label Text="vehículos" FontSize="14" TextColor="{StaticResource Gray500}" VerticalOptions="End" />
+                        </StackLayout>
+                    </Grid>
+                </Frame>
+            </Grid>
+
+            <!-- Alertas de Stock Bajo -->
+            <StackLayout Grid.Row="2">
+                <Label Text="Alertas de Stock Bajo" FontSize="16" FontAttributes="Bold" Margin="0,0,0,10" />
+                <Frame BorderColor="{StaticResource Gray200}" CornerRadius="8" Padding="0" HasShadow="False">
+                    <VerticalStackLayout Spacing="1">
+                        <!-- Alerta 1 -->
+                        <Grid Padding="16,12" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
+                            <Ellipse Fill="Orange" WidthRequest="12" HeightRequest="12" VerticalOptions="Center" />
+                            <StackLayout Grid.Column="1" Spacing="4">
+                                <Label Text="FRN-2345" FontSize="14" FontAttributes="Bold" />
+                                <Label Text="Filtro de aire" FontSize="13" />
+                                <Label Text="Stock: 3" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            </StackLayout>
+                            <Button Grid.Column="2" Text="Ver" HeightRequest="36" CornerRadius="18" Padding="15,0" />
+                        </Grid>
+
+                        <!-- Alerta 2 -->
+                        <Grid Padding="16,12" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16" BackgroundColor="{StaticResource Gray100}">
+                            <Ellipse Fill="Red" WidthRequest="12" HeightRequest="12" VerticalOptions="Center" />
+                            <StackLayout Grid.Column="1" Spacing="4">
+                                <Label Text="ACT-7845" FontSize="14" FontAttributes="Bold" />
+                                <Label Text="Aceite transmisión" FontSize="13" />
+                                <Label Text="Stock: 1" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            </StackLayout>
+                            <Button Grid.Column="2" Text="Ver" HeightRequest="36" CornerRadius="18" Padding="15,0" />
+                        </Grid>
+
+                        <!-- Alerta 3 -->
+                        <Grid Padding="16,12" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
+                            <Ellipse Fill="Red" WidthRequest="12" HeightRequest="12" VerticalOptions="Center" />
+                            <StackLayout Grid.Column="1" Spacing="4">
+                                <Label Text="PLT-9023" FontSize="14" FontAttributes="Bold" />
+                                <Label Text="Pastillas de freno" FontSize="13" />
+                                <Label Text="Stock: 0" FontSize="12" TextColor="{StaticResource Gray500}" />
+                            </StackLayout>
+                            <Button Grid.Column="2" Text="Ver" HeightRequest="36" CornerRadius="18" Padding="15,0" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Frame>
+            </StackLayout>
+
+            <!-- Transacciones Recientes -->
+            <StackLayout Grid.Row="3">
+                <Label Text="Movimientos Recientes" FontSize="16" FontAttributes="Bold" Margin="0,0,0,10" />
+                <Frame BorderColor="{StaticResource Gray200}" CornerRadius="8" Padding="0" HasShadow="False">
+                    <VerticalStackLayout Spacing="1">
+                        <!-- Transacción 1 -->
+                        <Grid Padding="16,12" ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                            <StackLayout Grid.Column="0" Spacing="4">
+                                <Label Text="Filtro de aire" FontSize="14" FontAttributes="Bold" />
+                                <Label Text="FRN-2345" FontSize="12" TextColor="{StaticResource Gray500}" />
+                                <StackLayout Orientation="Horizontal" Spacing="8">
+                                    <Label Text="Cant: 5" FontSize="12" />
+                                </StackLayout>
+                            </StackLayout>
+                            <Label Grid.Column="1" Text="08/03/25" VerticalOptions="Center" FontSize="12" TextColor="{StaticResource Gray500}" />
+                        </Grid>
+
+                        <!-- Transacción 2 -->
+                        <Grid Padding="16,12" ColumnDefinitions="*,Auto" ColumnSpacing="16" BackgroundColor="{StaticResource Gray100}">
+                            <StackLayout Grid.Column="0" Spacing="4">
+                                <Label Text="Bombilla delantera" FontSize="14" FontAttributes="Bold" />
+                                <Label Text="BDJ-5621" FontSize="12" TextColor="{StaticResource Gray500}" />
+                                <StackLayout Orientation="Horizontal" Spacing="8">
+                                    <Label Text="Cant: 2" FontSize="12" />
+                                    <Label Text="Vehículo: ABC123" FontSize="12" />
+                                </StackLayout>
+                            </StackLayout>
+                            <Label Grid.Column="1" Text="07/03/25" VerticalOptions="Center" FontSize="12" TextColor="{StaticResource Gray500}" />
+                        </Grid>
+
+                        <!-- Transacción 3 -->
+                        <Grid Padding="16,12" ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                            <StackLayout Grid.Column="0" Spacing="4">
+                                <Label Text="Aceite transmisión" FontSize="14" FontAttributes="Bold" />
+                                <Label Text="ACT-7845" FontSize="12" TextColor="{StaticResource Gray500}" />
+                                <StackLayout Orientation="Horizontal" Spacing="8">
+                                    <Label Text="Cant: 10" FontSize="12" />
+                                </StackLayout>
+                            </StackLayout>
+                            <Label Grid.Column="1" Text="06/03/25" VerticalOptions="Center" FontSize="12" TextColor="{StaticResource Gray500}" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Frame>
+            </StackLayout>
+
+            <!-- Botones de Acción Rápida -->
+            <Grid Grid.Row="4" ColumnDefinitions="*,*,*" ColumnSpacing="16" Margin="0,10,0,20">
+                <Button Text="Nueva Entrada"
+                        BackgroundColor="{StaticResource Primary}" TextColor="White"
+                        HeightRequest="50" CornerRadius="8" />
+
+                <Button Grid.Column="1" Text="Escanear Código"
+                        BackgroundColor="{StaticResource Secondary}" TextColor="{StaticResource SecondaryDarkText}"
+                        HeightRequest="50" CornerRadius="8" />
+
+                <Button Grid.Column="2" Text="Ver Reportes" 
+                        BackgroundColor="{StaticResource Tertiary}" TextColor="White"
+                        HeightRequest="50" CornerRadius="8" />
+            </Grid>
+        </Grid>
+    </ScrollView>
+</ContentPage>
