@@ -1,12 +1,167 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:AppInventariCor.Converters"
              x:Class="AppInventariCor.Views.InventarioPage"
-             Title="InventarioPage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to .NET MAUI!"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+             Title="Inventario">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:AlertLevelColorConverter x:Key="AlertLevelColorConverter"/>
+            <converters:BoolToIconConverter x:Key="BoolToIconConverter"/>
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid>
+        <!-- Pantalla de Carga (Visible inicialmente) -->
+        <Grid x:Name="LoadingView" 
+              IsVisible="{Binding IsInitializing}"
+              BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}"
+              VerticalOptions="Fill"
+              HorizontalOptions="Fill">
+
+            <VerticalStackLayout HorizontalOptions="Center" 
+                                 VerticalOptions="Center" 
+                                 Spacing="24">
+                <ActivityIndicator IsRunning="True" 
+                                   HeightRequest="48" 
+                                   WidthRequest="48"
+                                   HorizontalOptions="Center" />
+                <Label Text="Cargando inventario..."
+                       FontSize="18"
+                       HorizontalOptions="Center" />
+                <Label Text="{Binding LoadingMessage}"
+                       FontSize="14"
+                       TextColor="{StaticResource Gray500}"
+                       HorizontalOptions="Center" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <!-- Contenido Principal (Se muestra después de la carga) -->
+        <Grid x:Name="MainContent" 
+              IsVisible="{Binding IsInitializing, Converter={StaticResource InvertedBoolConverter}}"
+              RowDefinitions="Auto,Auto,*" 
+              Padding="12" 
+              RowSpacing="12">
+
+            <!-- Encabezado y Búsqueda -->
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <SearchBar Placeholder="Buscar repuesto..." 
+                           Text="{Binding SearchQuery}"
+                           SearchCommand="{Binding SearchCommand}"/>
+                <Button Grid.Column="1" Text="+" 
+                        HeightRequest="40" WidthRequest="40"
+                        Command="{Binding AddRepuestoCommand}"/>
+            </Grid>
+
+            <!-- Estadísticas -->
+            <Frame Grid.Row="1" Style="{StaticResource CardFrame}" Padding="12">
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Total Repuestos" 
+                               FontSize="12" 
+                               TextColor="{StaticResource Gray500}" />
+                        <Label Text="{Binding TotalRepuestos}" 
+                               FontSize="16" 
+                               FontAttributes="Bold" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Grid.Column="1" Spacing="2">
+                        <Label Text="Stock Bajo" 
+                               FontSize="12" 
+                               TextColor="{StaticResource Gray500}" />
+                        <Label Text="{Binding TotalStockBajo}" 
+                               FontSize="16" 
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource HighlightRed}" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Frame>
+
+            <!-- Vista de lista -->
+            <Grid Grid.Row="2">
+                <CollectionView ItemsSource="{Binding Repuestos}"
+                                RemainingItemsThreshold="3"
+                                RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}">
+
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout VerticalOptions="Center" 
+                                            HorizontalOptions="Center"
+                                            Spacing="16">
+                            <Label Text="No hay repuestos para mostrar" 
+                                   HorizontalOptions="Center"
+                                   FontSize="16"/>
+                            <Button Text="Agregar Repuesto" 
+                                    Command="{Binding AddRepuestoCommand}"/>
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Margin="0,4" 
+                                   Padding="12" 
+                                   Style="{StaticResource CardFrame}">
+
+                                <!-- Añadimos un TapGestureRecognizer al Frame -->
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer 
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RepuestoDetailCommand}" 
+                                        CommandParameter="{Binding .}" />
+                                </Frame.GestureRecognizers>
+
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                    <!-- Indicador de estado -->
+                                    <BoxView WidthRequest="6" 
+                                             HeightRequest="50" 
+                                             BackgroundColor="{Binding Cantidad, Converter={StaticResource AlertLevelColorConverter}}"
+                                             CornerRadius="3" />
+
+                                    <!-- Información del repuesto -->
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                        <Label Text="{Binding Nombre}" 
+                                               FontSize="16" 
+                                               FontAttributes="Bold"
+                                               LineBreakMode="TailTruncation" 
+                                               MaxLines="1"/>
+                                        <Label Text="{Binding Codigo}" 
+                                               FontSize="13" 
+                                               TextColor="{StaticResource Gray500}"/>
+                                        <HorizontalStackLayout Spacing="12">
+                                            <Label Text="{Binding Cantidad, StringFormat='Stock: {0}'}" 
+                                                   FontSize="13"/>
+                                            <Label Text="{Binding Precio, StringFormat='${0:N2}'}" 
+                                                   FontSize="13" 
+                                                   FontAttributes="Bold"/>
+                                        </HorizontalStackLayout>
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Indicador de carga para paginación -->
+                <VerticalStackLayout IsVisible="{Binding IsBusy}"
+                                    VerticalOptions="End"
+                                    HorizontalOptions="Center"
+                                    Margin="0,0,0,12">
+                    <Frame CornerRadius="20" 
+                           Padding="12,8" 
+                           HasShadow="True"
+                           BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray800}}"
+                           BorderColor="Transparent">
+                        <HorizontalStackLayout Spacing="8">
+                            <ActivityIndicator IsRunning="True" 
+                                              WidthRequest="20" 
+                                              HeightRequest="20" />
+                            <Label Text="Cargando más..." 
+                                   FontSize="14"
+                                   VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </Frame>
+                </VerticalStackLayout>
+            </Grid>
+        </Grid>
+    </Grid>
 </ContentPage>

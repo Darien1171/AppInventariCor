@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:AppInventariCor.Converters"
+             x:Class="AppInventariCor.Views.RepuestoDetallePage"
+             Title="{Binding Repuesto.Nombre}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:AlertLevelColorConverter x:Key="AlertLevelColorConverter"/>
+            <converters:TransactionTypeIconConverter x:Key="TransactionTypeIconConverter"/>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" Padding="16" RowSpacing="20">
+            <!-- Tarjeta de información principal -->
+            <Frame Grid.Row="0" Style="{StaticResource CardFrame}">
+                <Grid RowDefinitions="Auto,Auto" RowSpacing="16">
+                    <!-- Encabezado con estado -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackLayout Spacing="4">
+                            <Label Text="{Binding Repuesto.Codigo}" 
+                                   FontSize="16" 
+                                   TextColor="{StaticResource Gray500}"/>
+                            <Label Text="{Binding Repuesto.Nombre}" 
+                                   FontSize="24" 
+                                   FontAttributes="Bold"/>
+                        </StackLayout>
+
+                        <Frame Grid.Column="1" 
+                               BackgroundColor="{Binding Repuesto.Cantidad, Converter={StaticResource AlertLevelColorConverter}}"
+                               Padding="12,6" 
+                               CornerRadius="20"
+                               HasShadow="False">
+                            <Label Text="{Binding EstadoStock}" 
+                                   TextColor="White" 
+                                   FontAttributes="Bold"/>
+                        </Frame>
+                    </Grid>
+
+                    <!-- Información general -->
+                    <Grid Grid.Row="1" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="12">
+                        <!-- Columna izquierda -->
+                        <StackLayout Grid.Column="0" Grid.Row="0" Spacing="2">
+                            <Label Text="Categoría" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                            <Label Text="{Binding Repuesto.Categoria}" FontSize="16"/>
+                        </StackLayout>
+
+                        <StackLayout Grid.Column="0" Grid.Row="1" Spacing="2">
+                            <Label Text="Marca" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                            <Label Text="{Binding Repuesto.Marca}" FontSize="16"/>
+                        </StackLayout>
+
+                        <StackLayout Grid.Column="0" Grid.Row="2" Spacing="2">
+                            <Label Text="Modelo" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                            <Label Text="{Binding Repuesto.Modelo}" FontSize="16"/>
+                        </StackLayout>
+
+                        <StackLayout Grid.Column="0" Grid.Row="3" Spacing="2">
+                            <Label Text="Ubicación" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                            <Label Text="{Binding Repuesto.Ubicacion}" FontSize="16"/>
+                        </StackLayout>
+
+                        <!-- Columna derecha -->
+                        <StackLayout Grid.Column="1" Grid.Row="0" Spacing="2">
+                            <Label Text="Precio" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                            <Label Text="{Binding Repuesto.Precio, StringFormat='${0:N2}'}" FontSize="16" FontAttributes="Bold"/>
+                        </StackLayout>
+
+                        <StackLayout Grid.Column="1" Grid.Row="1" Spacing="2">
+                            <Label Text="Stock" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                            <Label Text="{Binding Repuesto.Cantidad}" FontSize="16"/>
+                        </StackLayout>
+
+                        <StackLayout Grid.Column="1" Grid.Row="2" Spacing="2">
+                            <Label Text="Stock Mínimo" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                            <Label Text="{Binding Repuesto.StockMinimo}" FontSize="16"/>
+                        </StackLayout>
+
+                        <StackLayout Grid.Column="1" Grid.Row="3" Spacing="2">
+                            <Label Text="Stock Óptimo" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                            <Label Text="{Binding Repuesto.StockOptimo}" FontSize="16"/>
+                        </StackLayout>
+                    </Grid>
+                </Grid>
+            </Frame>
+
+            <!-- Descripción -->
+            <Frame Grid.Row="1" Style="{StaticResource CardFrame}">
+                <StackLayout Spacing="8">
+                    <Label Text="Descripción" FontAttributes="Bold" FontSize="16"/>
+                    <Label Text="{Binding Repuesto.Descripcion}" TextType="Html"/>
+                </StackLayout>
+            </Frame>
+
+            <!-- Códigos de identificación -->
+            <Frame Grid.Row="2" Style="{StaticResource CardFrame}">
+                <Grid RowDefinitions="Auto,Auto" RowSpacing="16">
+                    <Label Text="Códigos" FontAttributes="Bold" FontSize="16"/>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="16">
+                        <StackLayout Grid.Column="0" Spacing="8">
+                            <Label Text="Código de barras" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                            <Frame BorderColor="{StaticResource Gray300}" Padding="8">
+                                <Label Text="{Binding Repuesto.CodigoBarras, TargetNullValue='No disponible'}"/>
+                            </Frame>
+                        </StackLayout>
+
+                        <StackLayout Grid.Column="1" Spacing="8">
+                            <Label Text="Código QR" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                            <Frame BorderColor="{StaticResource Gray300}" Padding="8">
+                                <Label Text="{Binding Repuesto.CodigoQR, TargetNullValue='No disponible'}"/>
+                            </Frame>
+                        </StackLayout>
+                    </Grid>
+                </Grid>
+            </Frame>
+
+            <!-- Opciones rápidas -->
+            <Frame Grid.Row="3" Style="{StaticResource CardFrame}">
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                    <Button Grid.Column="0" Text="Entrada" Command="{Binding EntradaCommand}" Style="{StaticResource SecondaryButton}"/>
+                    <Button Grid.Column="1" Text="Salida" Command="{Binding SalidaCommand}" Style="{StaticResource SecondaryButton}"/>
+                    <Button Grid.Column="2" Text="Ajustar" Command="{Binding AjustarCommand}" Style="{StaticResource SecondaryButton}"/>
+                </Grid>
+            </Frame>
+
+            <!-- Historial de transacciones -->
+            <StackLayout Grid.Row="4">
+                <Label Text="Historial de Movimientos" Style="{StaticResource SectionLabel}" Margin="0,0,0,10"/>
+
+                <StackLayout IsVisible="{Binding IsTransaccionesEmpty}" HorizontalOptions="Center" Margin="0,20">
+                    <Label Text="Sin movimientos registrados" TextColor="{StaticResource Gray500}"/>
+                </StackLayout>
+
+                <CollectionView ItemsSource="{Binding Transacciones}" 
+                               IsVisible="{Binding IsTransaccionesEmpty, Converter={StaticResource InvertedBoolConverter}}"
+                               HeightRequest="300">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Margin="0,4" Padding="12" Style="{StaticResource CardFrame}">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                    <!-- Indicador de tipo -->
+                                    <Image Source="{Binding Tipo, Converter={StaticResource TransactionTypeIconConverter}}"
+                                          WidthRequest="24" 
+                                          HeightRequest="24" 
+                                          VerticalOptions="Center"/>
+
+                                    <!-- Información de transacción -->
+                                    <StackLayout Grid.Column="1" Spacing="2">
+                                        <Label Text="{Binding Tipo}" FontSize="16" FontAttributes="Bold"/>
+                                        <Label Text="{Binding Fecha, StringFormat='{0:dd/MM/yyyy HH:mm}'}" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                                        <StackLayout Orientation="Horizontal" Spacing="8">
+                                            <Label Text="{Binding Cantidad, StringFormat='Cantidad: {0}'}" FontSize="13"/>
+                                            <Label Text="{Binding ResponsableNombre, StringFormat='Por: {0}'}" 
+                                                  IsVisible="{Binding ResponsableNombre, Converter={StaticResource StringToBoolConverter}}"
+                                                  FontSize="13"/>
+                                        </StackLayout>
+                                    </StackLayout>
+
+                                    <!-- Vehículo (si aplica) -->
+                                    <StackLayout Grid.Column="2" IsVisible="{Binding VehiculoId, Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <Label Text="{Binding Vehiculo.NumeroPlaca}" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                                    </StackLayout>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </StackLayout>
+
+            <!-- Botones de acción -->
+            <Grid Grid.Row="5" ColumnDefinitions="*,*" ColumnSpacing="16" Margin="0,10">
+                <Button Text="Editar" Command="{Binding EditarCommand}" Style="{StaticResource PrimaryButton}"/>
+                <Button Grid.Column="1" Text="Eliminar" Command="{Binding EliminarCommand}" Style="{StaticResource TertiaryButton}"/>
+            </Grid>
+        </Grid>
+    </ScrollView>
+</ContentPage>
