@@ -466,25 +466,18 @@ namespace AppInventariCor.ViewModels
                 return;
             }
 
-            // Mostrar un mensaje para confirmar que se seleccionó un repuesto
-            await Application.Current.MainPage.DisplayAlert("Repuesto Seleccionado",
-                $"Has seleccionado: {repuesto.Nombre} (ID: {repuesto.Id})", "Continuar");
-
             try
             {
-                // Navegar a la página de detalles
-                var navigationParameter = new Dictionary<string, object>
-        {
-            { "id", repuesto.Id }
-        };
-
-                await Shell.Current.GoToAsync($"{nameof(Views.RepuestoDetallePage)}", navigationParameter);
+                // Navegación simplificada sin parámetros
+                await Shell.Current.GoToAsync(nameof(RepuestoDetallePage));
             }
             catch (Exception ex)
             {
-                // Mostrar cualquier error que ocurra durante la navegación
-                await Application.Current.MainPage.DisplayAlert("Error de Navegación",
-                    $"No se pudo navegar a la página de detalles: {ex.Message}", "OK");
+                // Mostrar detalles completos del error
+                await Application.Current.MainPage.DisplayAlert(
+                    "Error de Navegación",
+                    $"Detalle del error: {ex.Message}\n\nTipo: {ex.GetType().Name}\n\nStack: {ex.StackTrace}",
+                    "OK");
             }
         }
     }

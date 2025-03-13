@@ -8,8 +8,8 @@ namespace AppInventariCor
         {
             InitializeComponent();
 
-            // Registrar rutas para navegación
-            Routing.RegisterRoute(nameof(Views.RepuestoDetallePage), typeof(Views.RepuestoDetallePage));
+            // Registrar rutas para navegación - asegúrate de que el nombre coincida exactamente con el de la clase
+            Routing.RegisterRoute(nameof(RepuestoDetallePage), typeof(RepuestoDetallePage));
         }
     }
 }
