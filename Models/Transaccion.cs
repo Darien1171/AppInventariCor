@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace AppInventariCor.Models
 {
@@ -19,32 +20,44 @@ namespace AppInventariCor.Models
         [Required]
         public int Cantidad { get; set; }
 
-        public string? Observaciones { get; set; }
+        // Campos mejorados para historial
+        public int CantidadAnterior { get; set; }
+        public int CantidadPosterior { get; set; }
+        public decimal PrecioUnitario { get; set; }
+        public decimal ValorTotal { get; set; }
 
+        public string? Observaciones { get; set; }
         public string? ResponsableNombre { get; set; }
+
+        // Datos para entradas
+        public string? ProveedorNombre { get; set; }
+        public string? NumeroFactura { get; set; }
 
         public string? FirmaUrl { get; set; }
 
-        // Relaciones
+        // Auditoría
+        public DateTime FechaCreacion { get; set; } = DateTime.Now;
+        public DateTime? FechaModificacion { get; set; }
+        public string? UsuarioSistemaId { get; set; }
+
+        // Relaciones por ID
         public int RepuestoId { get; set; }
 
-        [ForeignKey("RepuestoId")]
-        public Repuesto Repuesto { get; set; }
+        // Propiedades de navegación para UI, marcadas para ignorar en serialización JSON
+        [JsonIgnore]
+        public Repuesto? Repuesto { get; set; }
+
+        // Datos de referencia rápida (evita necesidad de cargar todo el repuesto)
+        public string RepuestoCodigo { get; set; }
+        public string RepuestoNombre { get; set; }
 
         public int? VehiculoId { get; set; }
+        public string? VehiculoPlaca { get; set; }
 
-        [ForeignKey("VehiculoId")]
+        [JsonIgnore]
         public Vehiculo? Vehiculo { get; set; }
 
-        // Imágenes de evidencia
+        // Evidencia
         public List<string> EvidenciaImagenUrls { get; set; } = new List<string>();
-    }
-
-    public enum TipoTransaccion
-    {
-        Entrada,
-        Salida,
-        Devolucion,
-        Ajuste
     }
 }

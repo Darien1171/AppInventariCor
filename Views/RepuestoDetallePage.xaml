@@ -242,11 +242,15 @@
                                                    IsVisible="{Binding ResponsableNombre, Converter={StaticResource StringToBoolConverter}}"
                                                    FontSize="13"/>
                                         </StackLayout>
+                                        <Label Text="{Binding Observaciones}" 
+                                               IsVisible="{Binding Observaciones, Converter={StaticResource StringToBoolConverter}}"
+                                               FontSize="13" 
+                                               TextColor="{StaticResource Gray500}"/>
                                     </StackLayout>
 
                                     <!-- Vehículo (si aplica) -->
                                     <StackLayout Grid.Column="2" IsVisible="{Binding VehiculoId, Converter={StaticResource BoolToVisibilityConverter}}">
-                                        <Label Text="{Binding Vehiculo.NumeroPlaca}" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                                        <Label Text="{Binding VehiculoPlaca}" FontSize="13" TextColor="{StaticResource Gray500}"/>
                                     </StackLayout>
                                 </Grid>
                             </Frame>
@@ -255,11 +259,13 @@
                 </CollectionView>
             </StackLayout>
 
-            <!-- Botones de acción -->
-            <Grid Grid.Row="5" ColumnDefinitions="*,*" ColumnSpacing="16" Margin="0,10">
-                <Button Text="Editar" Command="{Binding EditarCommand}" Style="{StaticResource PrimaryButton}"/>
-                <Button Grid.Column="1" Text="Eliminar" Command="{Binding EliminarCommand}" Style="{StaticResource TertiaryButton}"/>
-            </Grid>
+            <!-- Botón de Editar -->
+            <Button Grid.Row="5" 
+                    Text="Editar" 
+                    Command="{Binding EditarCommand}" 
+                    Style="{StaticResource PrimaryButton}"
+                    HorizontalOptions="Fill"
+                    Margin="0,10"/>
         </Grid>
     </ScrollView>
 </ContentPage>
