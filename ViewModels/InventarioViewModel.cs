@@ -7,6 +7,7 @@ using AppInventariCor.Models;
 using System.Linq;
 using System.Collections.Generic;
 using AppInventariCor.Views;
+using AppInventariCor.Services;
 
 namespace AppInventariCor.ViewModels
 {
@@ -103,10 +104,10 @@ namespace AppInventariCor.ViewModels
                 LoadingMessage = "Cargando inventario...";
                 await Task.Delay(300);
 
-                // Obtener datos de muestra completos para estadísticas
-                var allData = GetSampleData();
-                TotalRepuestos = allData.Count;
-                TotalStockBajo = allData.Count(r => r.Cantidad <= r.StockMinimo);
+                // Obtener datos del JSON para estadísticas
+                var repuestos = await RepuestoJson.ObtenerRepuestos();
+                TotalRepuestos = repuestos.Count;
+                TotalStockBajo = repuestos.Count(r => r.Cantidad <= r.StockMinimo);
 
                 LoadingMessage = "Preparando lista de repuestos...";
                 await Task.Delay(300);
@@ -153,14 +154,29 @@ namespace AppInventariCor.ViewModels
                     Repuestos.Clear();
                 }
 
-                // Obtener datos paginados aplicando filtros si existen
-                var nuevosRepuestos = GetFilteredData()
+                // Obtener datos del JSON
+                var todosRepuestos = await RepuestoJson.ObtenerRepuestos();
+
+                // Aplicar filtros si hay búsqueda
+                var repuestosFiltrados = todosRepuestos;
+                if (!string.IsNullOrWhiteSpace(_searchQuery))
+                {
+                    string query = _searchQuery.ToLower();
+                    repuestosFiltrados = todosRepuestos.Where(r =>
+                        (r.Nombre?.ToLower().Contains(query) ?? false) ||
+                        (r.Codigo?.ToLower().Contains(query) ?? false) ||
+                        (r.Categoria?.ToLower().Contains(query) ?? false)).ToList();
+                }
+
+                // Aplicar paginación
+                var nuevosRepuestos = repuestosFiltrados
                     .Skip((_currentPage - 1) * _pageSize)
                     .Take(_pageSize)
                     .ToList();
 
                 // Verificar si hay más datos
-                _hasMoreItems = nuevosRepuestos.Count == _pageSize;
+                _hasMoreItems = nuevosRepuestos.Count == _pageSize &&
+                                ((_currentPage * _pageSize) < repuestosFiltrados.Count);
 
                 // Añadir los elementos a la colección
                 foreach (var repuesto in nuevosRepuestos)
@@ -179,252 +195,6 @@ namespace AppInventariCor.ViewModels
             {
                 IsBusy = false;
             }
-        }
-
-        // Obtener datos filtrados según la búsqueda
-        private List<Repuesto> GetFilteredData()
-        {
-            var data = GetSampleData();
-
-            // Aplicar filtro si hay texto de búsqueda
-            if (!string.IsNullOrWhiteSpace(_searchQuery))
-            {
-                string query = _searchQuery.ToLower();
-                return data.Where(r =>
-                    r.Nombre.ToLower().Contains(query) ||
-                    r.Codigo.ToLower().Contains(query) ||
-                    r.Categoria.ToLower().Contains(query)).ToList();
-            }
-
-            return data;
-        }
-
-        // Simular datos de muestra
-        private List<Repuesto> GetSampleData()
-        {
-            return new List<Repuesto>
-            {
-                new Repuesto
-                {
-                    Id = 1,
-                    Codigo = "FLT-5678",
-                    Nombre = "Filtro de aceite XYZ-123",
-                    Categoria = "Filtros",
-                    Marca = "FilterPro",
-                    Precio = 45.99m,
-                    Cantidad = 12,
-                    StockMinimo = 5
-                },
-                new Repuesto
-                {
-                    Id = 2,
-                    Codigo = "BDJ-1234",
-                    Nombre = "Bombilla delantera LED",
-                    Categoria = "Iluminación",
-                    Marca = "LightMaster",
-                    Precio = 28.50m,
-                    Cantidad = 8,
-                    StockMinimo = 10
-                },
-                new Repuesto
-                {
-                    Id = 3,
-                    Codigo = "ACE-7890",
-                    Nombre = "Aceite de motor sintético 10W-40",
-                    Categoria = "Lubricantes",
-                    Marca = "OilTech",
-                    Precio = 35.75m,
-                    Cantidad = 20,
-                    StockMinimo = 15
-                },
-                new Repuesto
-                {
-                    Id = 4,
-                    Codigo = "FRN-4567",
-                    Nombre = "Pastillas de freno delanteras",
-                    Categoria = "Frenos",
-                    Marca = "BrakeSafe",
-                    Precio = 65.25m,
-                    Cantidad = 4,
-                    StockMinimo = 8
-                },
-                new Repuesto
-                {
-                    Id = 5,
-                    Codigo = "BAT-9876",
-                    Nombre = "Batería 12V 75Ah",
-                    Categoria = "Eléctricos",
-                    Marca = "PowerCell",
-                    Precio = 120.00m,
-                    Cantidad = 2,
-                    StockMinimo = 3
-                },
-                new Repuesto
-                {
-                    Id = 6,
-                    Codigo = "RAD-3456",
-                    Nombre = "Radiador de agua",
-                    Categoria = "Refrigeración",
-                    Marca = "CoolSys",
-                    Precio = 95.50m,
-                    Cantidad = 2,
-                    StockMinimo = 2
-                },
-                new Repuesto
-                {
-                    Id = 7,
-                    Codigo = "ESC-7821",
-                    Nombre = "Escobillas limpiaparabrisas",
-                    Categoria = "Exterior",
-                    Marca = "CleanView",
-                    Precio = 15.75m,
-                    Cantidad = 15,
-                    StockMinimo = 5
-                },
-                new Repuesto
-                {
-                    Id = 8,
-                    Codigo = "BUJ-9102",
-                    Nombre = "Bujías de encendido",
-                    Categoria = "Motor",
-                    Marca = "SparkTech",
-                    Precio = 8.99m,
-                    Cantidad = 30,
-                    StockMinimo = 10
-                },
-                new Repuesto
-                {
-                    Id = 9,
-                    Codigo = "AMO-4355",
-                    Nombre = "Amortiguadores traseros",
-                    Categoria = "Suspensión",
-                    Marca = "SmoothRide",
-                    Precio = 89.50m,
-                    Cantidad = 4,
-                    StockMinimo = 4
-                },
-                new Repuesto
-                {
-                    Id = 10,
-                    Codigo = "COR-6543",
-                    Nombre = "Correa de distribución",
-                    Categoria = "Motor",
-                    Marca = "BeltPro",
-                    Precio = 35.25m,
-                    Cantidad = 3,
-                    StockMinimo = 5
-                },
-                new Repuesto
-                {
-                    Id = 11,
-                    Codigo = "EMB-2109",
-                    Nombre = "Kit de embrague",
-                    Categoria = "Transmisión",
-                    Marca = "ClutchMaster",
-                    Precio = 145.99m,
-                    Cantidad = 3,
-                    StockMinimo = 2
-                },
-                new Repuesto
-                {
-                    Id = 12,
-                    Codigo = "FIL-3322",
-                    Nombre = "Filtro de habitáculo",
-                    Categoria = "Filtros",
-                    Marca = "AirClean",
-                    Precio = 12.50m,
-                    Cantidad = 9,
-                    StockMinimo = 8
-                },
-                new Repuesto
-                {
-                    Id = 13,
-                    Codigo = "TER-8576",
-                    Nombre = "Termostato motor",
-                    Categoria = "Refrigeración",
-                    Marca = "TempControl",
-                    Precio = 22.75m,
-                    Cantidad = 7,
-                    StockMinimo = 5
-                },
-                new Repuesto
-                {
-                    Id = 14,
-                    Codigo = "ALT-6701",
-                    Nombre = "Alternador 12V 90A",
-                    Categoria = "Eléctricos",
-                    Marca = "PowerGen",
-                    Precio = 129.99m,
-                    Cantidad = 4,
-                    StockMinimo = 2
-                },
-                new Repuesto
-                {
-                    Id = 15,
-                    Codigo = "BOC-3291",
-                    Nombre = "Bocina doble tono",
-                    Categoria = "Accesorios",
-                    Marca = "SoundAlert",
-                    Precio = 18.50m,
-                    Cantidad = 12,
-                    StockMinimo = 5
-                },
-                new Repuesto
-                {
-                    Id = 16,
-                    Codigo = "MAN-4491",
-                    Nombre = "Manguera radiador",
-                    Categoria = "Refrigeración",
-                    Marca = "FlexTube",
-                    Precio = 14.25m,
-                    Cantidad = 8,
-                    StockMinimo = 6
-                },
-                new Repuesto
-                {
-                    Id = 17,
-                    Codigo = "BOB-7734",
-                    Nombre = "Bobina de encendido",
-                    Categoria = "Ignición",
-                    Marca = "SparkMaster",
-                    Precio = 45.00m,
-                    Cantidad = 6,
-                    StockMinimo = 4
-                },
-                new Repuesto
-                {
-                    Id = 18,
-                    Codigo = "SOP-9921",
-                    Nombre = "Soporte de motor",
-                    Categoria = "Suspensión",
-                    Marca = "EngineMount",
-                    Precio = 72.50m,
-                    Cantidad = 3,
-                    StockMinimo = 2
-                },
-                new Repuesto
-                {
-                    Id = 19,
-                    Codigo = "RET-1105",
-                    Nombre = "Retén cigüeñal",
-                    Categoria = "Motor",
-                    Marca = "SealPro",
-                    Precio = 11.99m,
-                    Cantidad = 15,
-                    StockMinimo = 8
-                },
-                new Repuesto
-                {
-                    Id = 20,
-                    Codigo = "RUL-5509",
-                    Nombre = "Rodamiento delantero",
-                    Categoria = "Transmisión",
-                    Marca = "BearingTech",
-                    Precio = 32.75m,
-                    Cantidad = 8,
-                    StockMinimo = 4
-                }
-            };
         }
 
         // Manejadores de comandos
@@ -451,11 +221,8 @@ namespace AppInventariCor.ViewModels
 
         private async void OnAddRepuesto()
         {
-            // Solo un placeholder para la funcionalidad
-            await Application.Current.MainPage.DisplayAlert(
-                "Agregar Repuesto",
-                "Esta funcionalidad se implementará próximamente",
-                "OK");
+            // Navegar a la página de agregar repuesto
+            await Shell.Current.GoToAsync(nameof(AgregarRepuestoPage));
         }
 
         private async void OnRepuestoDetail(Repuesto repuesto)
@@ -468,12 +235,16 @@ namespace AppInventariCor.ViewModels
 
             try
             {
-                // Navegación simplificada sin parámetros
-                await Shell.Current.GoToAsync(nameof(RepuestoDetallePage));
+                // Enviar ID como parámetro para que la página de detalles pueda cargarlo desde JSON
+                var navigationParameter = new Dictionary<string, object>
+                {
+                    { "RepuestoId", repuesto.Id }
+                };
+
+                await Shell.Current.GoToAsync($"{nameof(RepuestoDetallePage)}", navigationParameter);
             }
             catch (Exception ex)
             {
-                // Mostrar detalles completos del error
                 await Application.Current.MainPage.DisplayAlert(
                     "Error de Navegación",
                     $"Detalle del error: {ex.Message}\n\nTipo: {ex.GetType().Name}\n\nStack: {ex.StackTrace}",

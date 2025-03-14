@@ -10,6 +10,7 @@ namespace AppInventariCor
 
             // Registrar rutas para navegación - asegúrate de que el nombre coincida exactamente con el de la clase
             Routing.RegisterRoute(nameof(RepuestoDetallePage), typeof(RepuestoDetallePage));
+            Routing.RegisterRoute(nameof(AgregarRepuestoPage), typeof(AgregarRepuestoPage));
         }
     }
 }

@@ -5,14 +5,28 @@ using Microsoft.Maui.Controls;
 using AppInventariCor.Models;
 using System.Linq;
 using System.Diagnostics;
+using AppInventariCor.Services;
 
 namespace AppInventariCor.ViewModels
 {
+    [QueryProperty(nameof(RepuestoId), "RepuestoId")]
     public class RepuestoDetalleViewModel : BaseViewModel
     {
+        private int _repuestoId;
         private Repuesto _repuesto;
         private ObservableCollection<Transaccion> _transacciones;
         private string _estadoStock;
+        private bool _isLoading = true;
+
+        public int RepuestoId
+        {
+            get => _repuestoId;
+            set
+            {
+                _repuestoId = value;
+                LoadRepuestoAsync(value);
+            }
+        }
 
         public Repuesto Repuesto
         {
@@ -25,9 +39,6 @@ namespace AppInventariCor.ViewModels
                     CargarTransacciones();
                     OnPropertyChanged(nameof(IsTransaccionesEmpty));
                     Title = _repuesto?.Nombre ?? "Detalle de Repuesto";
-
-                    // Agregar depuración para verificar que el repuesto se está estableciendo
-                    Debug.WriteLine($"Repuesto establecido: {_repuesto?.Nombre}, ID: {_repuesto?.Id}");
                 }
             }
         }
@@ -46,6 +57,12 @@ namespace AppInventariCor.ViewModels
 
         public bool IsTransaccionesEmpty => Transacciones == null || Transacciones.Count == 0;
 
+        public bool IsLoading
+        {
+            get => _isLoading;
+            set => SetProperty(ref _isLoading, value);
+        }
+
         // Comandos
         public ICommand EntradaCommand { get; }
         public ICommand SalidaCommand { get; }
@@ -53,10 +70,10 @@ namespace AppInventariCor.ViewModels
         public ICommand EditarCommand { get; }
         public ICommand EliminarCommand { get; }
 
-        // Constructor sin parámetros
+        // Constructor
         public RepuestoDetalleViewModel()
         {
-            Debug.WriteLine("RepuestoDetalleViewModel: Constructor vacío llamado");
+            Debug.WriteLine("RepuestoDetalleViewModel: Constructor llamado");
 
             Transacciones = new ObservableCollection<Transaccion>();
 
@@ -67,15 +84,50 @@ namespace AppInventariCor.ViewModels
             EditarCommand = new Command(OnEditar);
             EliminarCommand = new Command(OnEliminar);
 
-            Title = "Detalle de Repuesto";
+            Title = "Cargando repuesto...";
         }
 
-        // Constructor con repuesto
-        public RepuestoDetalleViewModel(Repuesto repuesto) : this()
+        private async void LoadRepuestoAsync(int repuestoId)
         {
-            Debug.WriteLine($"RepuestoDetalleViewModel: Constructor con repuesto llamado. ID={repuesto?.Id}, Nombre={repuesto?.Nombre}");
-            // Establecer el repuesto después de inicializar todo lo demás
-            Repuesto = repuesto;
+            try
+            {
+                IsLoading = true;
+
+                // Cargar todos los repuestos desde JSON
+                var repuestos = await RepuestoJson.ObtenerRepuestos();
+
+                // Buscar el repuesto específico por ID
+                var repuesto = repuestos.FirstOrDefault(r => r.Id == repuestoId);
+
+                if (repuesto != null)
+                {
+                    Repuesto = repuesto;
+                    Debug.WriteLine($"Repuesto cargado: {repuesto.Nombre}, ID: {repuesto.Id}");
+                }
+                else
+                {
+                    Debug.WriteLine($"No se encontró repuesto con ID: {repuestoId}");
+                    await Application.Current.MainPage.DisplayAlert(
+                        "Error",
+                        "No se encontró el repuesto solicitado.",
+                        "OK");
+
+                    // Volver a la página anterior si no se encuentra el repuesto
+                    await Shell.Current.GoToAsync("..");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error al cargar repuesto: {ex.Message}");
+                await Application.Current.MainPage.DisplayAlert(
+                    "Error",
+                    $"Ocurrió un error al cargar los datos: {ex.Message}",
+                    "OK");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
         private void ActualizarEstadoStock()
@@ -108,14 +160,14 @@ namespace AppInventariCor.ViewModels
 
         private void CargarTransacciones()
         {
-            // En una implementación real, aquí se cargarían las transacciones desde una base de datos
-            // Para este ejemplo, crearemos algunas transacciones de muestra
+            // En una implementación real, aquí cargaríamos las transacciones relacionadas con este repuesto desde JSON
+            // Por ahora, solo limpiamos la colección y creamos algunas de ejemplo basadas en la ID real
 
             if (Repuesto == null) return;
 
             Transacciones.Clear();
 
-            // Datos de muestra para el historial de transacciones
+            // Datos de ejemplo para el historial de transacciones, pero usando el ID real del repuesto
             Transacciones.Add(new Transaccion
             {
                 Id = 1,
@@ -127,59 +179,249 @@ namespace AppInventariCor.ViewModels
                 ResponsableNombre = "Juan Perez"
             });
 
+            // Transacción más reciente
             Transacciones.Add(new Transaccion
             {
                 Id = 2,
-                Fecha = DateTime.Now.AddDays(-7),
-                Tipo = TipoTransaccion.Salida,
-                Cantidad = 3,
-                RepuestoId = Repuesto.Id,
-                Repuesto = Repuesto,
-                ResponsableNombre = "Maria Lopez",
-                VehiculoId = 1,
-                Vehiculo = new Vehiculo { NumeroPlaca = "ABC-123" }
-            });
-
-            Transacciones.Add(new Transaccion
-            {
-                Id = 3,
                 Fecha = DateTime.Now.AddDays(-2),
                 Tipo = TipoTransaccion.Ajuste,
-                Cantidad = 1,
+                Cantidad = Repuesto.Cantidad, // Usamos la cantidad actual
                 RepuestoId = Repuesto.Id,
                 Repuesto = Repuesto,
-                ResponsableNombre = "Carlos Rodriguez",
-                Observaciones = "Ajuste por inventario físico"
+                ResponsableNombre = "Sistema",
+                Observaciones = "Registro inicial en sistema"
             });
 
             Debug.WriteLine($"Cargadas {Transacciones.Count} transacciones para el repuesto {Repuesto.Id}");
             OnPropertyChanged(nameof(IsTransaccionesEmpty));
         }
 
-        // Implementaciones de comandos (versiones simplificadas)
-        private void OnEntrada()
+        // Implementaciones de comandos
+        private async void OnEntrada()
         {
-            Debug.WriteLine("Comando Entrada ejecutado");
+            // Placeholder: En una versión completa, esto mostraría un formulario para registrar entrada
+            string resultado = await Application.Current.MainPage.DisplayPromptAsync(
+                "Entrada de Stock",
+                "Ingrese la cantidad a añadir:",
+                accept: "Confirmar",
+                cancel: "Cancelar",
+                placeholder: "Cantidad",
+                maxLength: 5,
+                keyboard: Keyboard.Numeric);
+
+            // Validar el resultado manualmente
+            int cantidadEntrada = 0;
+            bool success = !string.IsNullOrEmpty(resultado) && int.TryParse(resultado, out cantidadEntrada) && cantidadEntrada > 0;
+
+            if (success && cantidadEntrada > 0)
+            {
+                try
+                {
+                    // Actualizar repuesto
+                    Repuesto.Cantidad += cantidadEntrada;
+
+                    // Guardar cambios
+                    var repuestos = await RepuestoJson.ObtenerRepuestos();
+                    var index = repuestos.FindIndex(r => r.Id == Repuesto.Id);
+                    if (index >= 0)
+                    {
+                        repuestos[index] = Repuesto;
+                        await RepuestoJson.GuardarRepuestos(repuestos);
+
+                        // Actualizar interfaz
+                        ActualizarEstadoStock();
+
+                        // Agregar transacción a la lista
+                        var transaccion = new Transaccion
+                        {
+                            Id = Transacciones.Count + 1,
+                            Fecha = DateTime.Now,
+                            Tipo = TipoTransaccion.Entrada,
+                            Cantidad = cantidadEntrada,
+                            RepuestoId = Repuesto.Id,
+                            Repuesto = Repuesto,
+                            ResponsableNombre = "Usuario"
+                        };
+
+                        Transacciones.Insert(0, transaccion);
+                        OnPropertyChanged(nameof(IsTransaccionesEmpty));
+
+                        await Application.Current.MainPage.DisplayAlert("Éxito", $"Se registró entrada de {cantidadEntrada} unidades", "OK");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Error", $"No se pudo registrar la entrada: {ex.Message}", "OK");
+                }
+            }
         }
 
-        private void OnSalida()
+        private async void OnSalida()
         {
-            Debug.WriteLine("Comando Salida ejecutado");
+            // Placeholder: En una versión completa, esto mostraría un formulario para registrar salida
+            if (Repuesto.Cantidad <= 0)
+            {
+                await Application.Current.MainPage.DisplayAlert("Error", "No hay stock disponible para realizar salidas", "OK");
+                return;
+            }
+
+            string resultado = await Application.Current.MainPage.DisplayPromptAsync(
+                "Salida de Stock",
+                $"Ingrese la cantidad a retirar (máx. {Repuesto.Cantidad}):",
+                accept: "Confirmar",
+                cancel: "Cancelar",
+                placeholder: "Cantidad",
+                maxLength: 5,
+                keyboard: Keyboard.Numeric);
+
+            // Validar el resultado manualmente
+            int cantidadSalida = 0;
+            bool success = !string.IsNullOrEmpty(resultado) &&
+                           int.TryParse(resultado, out cantidadSalida) &&
+                           cantidadSalida > 0 &&
+                           cantidadSalida <= Repuesto.Cantidad;
+
+            if (success && cantidadSalida > 0)
+            {
+                try
+                {
+                    // Actualizar repuesto
+                    Repuesto.Cantidad -= cantidadSalida;
+
+                    // Guardar cambios
+                    var repuestos = await RepuestoJson.ObtenerRepuestos();
+                    var index = repuestos.FindIndex(r => r.Id == Repuesto.Id);
+                    if (index >= 0)
+                    {
+                        repuestos[index] = Repuesto;
+                        await RepuestoJson.GuardarRepuestos(repuestos);
+
+                        // Actualizar interfaz
+                        ActualizarEstadoStock();
+
+                        // Agregar transacción a la lista
+                        var transaccion = new Transaccion
+                        {
+                            Id = Transacciones.Count + 1,
+                            Fecha = DateTime.Now,
+                            Tipo = TipoTransaccion.Salida,
+                            Cantidad = cantidadSalida,
+                            RepuestoId = Repuesto.Id,
+                            Repuesto = Repuesto,
+                            ResponsableNombre = "Usuario"
+                        };
+
+                        Transacciones.Insert(0, transaccion);
+                        OnPropertyChanged(nameof(IsTransaccionesEmpty));
+
+                        await Application.Current.MainPage.DisplayAlert("Éxito", $"Se registró salida de {cantidadSalida} unidades", "OK");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Error", $"No se pudo registrar la salida: {ex.Message}", "OK");
+                }
+            }
         }
 
-        private void OnAjustar()
+        private async void OnAjustar()
         {
-            Debug.WriteLine("Comando Ajustar ejecutado");
+            // Placeholder: En una versión completa, esto mostraría un formulario para ajustar stock
+            string resultado = await Application.Current.MainPage.DisplayPromptAsync(
+                "Ajuste de Stock",
+                "Ingrese la cantidad correcta en stock:",
+                accept: "Confirmar",
+                cancel: "Cancelar",
+                placeholder: "Cantidad",
+                initialValue: Repuesto.Cantidad.ToString(),
+                maxLength: 5,
+                keyboard: Keyboard.Numeric);
+
+            // Validar el resultado manualmente
+            int nuevoStock = 0;
+            bool success = !string.IsNullOrEmpty(resultado) &&
+                           int.TryParse(resultado, out nuevoStock) &&
+                           nuevoStock >= 0;
+
+            if (success)
+            {
+                try
+                {
+                    int diferencia = nuevoStock - Repuesto.Cantidad;
+
+                    // Actualizar repuesto
+                    Repuesto.Cantidad = nuevoStock;
+
+                    // Guardar cambios
+                    var repuestos = await RepuestoJson.ObtenerRepuestos();
+                    var index = repuestos.FindIndex(r => r.Id == Repuesto.Id);
+                    if (index >= 0)
+                    {
+                        repuestos[index] = Repuesto;
+                        await RepuestoJson.GuardarRepuestos(repuestos);
+
+                        // Actualizar interfaz
+                        ActualizarEstadoStock();
+
+                        // Agregar transacción a la lista
+                        var transaccion = new Transaccion
+                        {
+                            Id = Transacciones.Count + 1,
+                            Fecha = DateTime.Now,
+                            Tipo = TipoTransaccion.Ajuste,
+                            Cantidad = Math.Abs(diferencia),
+                            RepuestoId = Repuesto.Id,
+                            Repuesto = Repuesto,
+                            ResponsableNombre = "Usuario",
+                            Observaciones = diferencia >= 0 ? "Ajuste positivo" : "Ajuste negativo"
+                        };
+
+                        Transacciones.Insert(0, transaccion);
+                        OnPropertyChanged(nameof(IsTransaccionesEmpty));
+
+                        await Application.Current.MainPage.DisplayAlert("Éxito", "Stock ajustado correctamente", "OK");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Error", $"No se pudo realizar el ajuste: {ex.Message}", "OK");
+                }
+            }
         }
 
-        private void OnEditar()
+        private async void OnEditar()
         {
-            Debug.WriteLine("Comando Editar ejecutado");
+            await Application.Current.MainPage.DisplayAlert("Editar", "La función de edición estará disponible próximamente", "OK");
         }
 
-        private void OnEliminar()
+        private async void OnEliminar()
         {
-            Debug.WriteLine("Comando Eliminar ejecutado");
+            bool confirmar = await Application.Current.MainPage.DisplayAlert(
+                "Confirmar eliminación",
+                $"¿Está seguro que desea eliminar el repuesto '{Repuesto.Nombre}'?",
+                "Sí, eliminar",
+                "Cancelar");
+
+            if (confirmar)
+            {
+                try
+                {
+                    bool resultado = await RepuestoJson.EliminarRepuesto(Repuesto.Id);
+                    if (resultado)
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Éxito", "El repuesto ha sido eliminado", "OK");
+                        await Shell.Current.GoToAsync("..");
+                    }
+                    else
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Error", "No se pudo eliminar el repuesto", "OK");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Error", $"Error al eliminar: {ex.Message}", "OK");
+                }
+            }
         }
     }
 }

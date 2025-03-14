@@ -17,14 +17,11 @@ namespace AppInventariCor.Views
         {
             base.OnAppearing();
 
-            // Habilitar aquí cualquier lógica necesaria al aparecer la página
-        }
-
-        protected override void OnDisappearing()
-        {
-            base.OnDisappearing();
-
-            // Limpiar recursos o detener procesos aquí si es necesario
+            // Actualizar la lista de repuestos cada vez que la página se vuelve a mostrar
+            if (_viewModel != null)
+            {
+                _viewModel.RefreshCommand.Execute(null);
+            }
         }
     }
 }
