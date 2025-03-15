@@ -8,6 +8,7 @@ using System.Diagnostics;
 using AppInventariCor.Services;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AppInventariCor.Views;
 
 namespace AppInventariCor.ViewModels
 {
@@ -480,7 +481,37 @@ namespace AppInventariCor.ViewModels
 
         private async void OnEditar()
         {
-            await Application.Current.MainPage.DisplayAlert("Editar", "La función de edición estará disponible próximamente", "OK");
+            try
+            {
+                if (Repuesto == null)
+                {
+                    await Application.Current.MainPage.DisplayAlert(
+                        "Error",
+                        "No se puede editar: Información del repuesto no disponible",
+                        "OK");
+                    return;
+                }
+
+                Debug.WriteLine($"[RepuestoDetalleViewModel] Iniciando edición del repuesto: {Repuesto.Id} - {Repuesto.Codigo}");
+
+                // Es crucial establecer IsEditMode primero para que el ViewModel sepa que debe cargar el repuesto
+                var navigationParameter = new Dictionary<string, object>
+                {
+                    { "IsEditMode", true },
+                    { "RepuestoId", Repuesto.Id }
+                };
+
+                // Navegar a la página de agregar repuesto pero en modo edición
+                await Shell.Current.GoToAsync($"{nameof(AgregarRepuestoPage)}", navigationParameter);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[RepuestoDetalleViewModel] Error en OnEditar: {ex.Message}");
+                await Application.Current.MainPage.DisplayAlert(
+                    "Error",
+                    $"No se pudo iniciar la edición: {ex.Message}",
+                    "OK");
+            }
         }
     }
 }

@@ -1,15 +1,22 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:AppInventariCor.Converters"
              x:Class="AppInventariCor.Views.AgregarRepuestoPage"
              Title="Agregar Repuesto">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
     <ScrollView>
         <Grid Padding="20" RowSpacing="15" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
 
             <!-- Título -->
             <Label Grid.Row="0" 
-                   Text="Nuevo Repuesto" 
+                   Text="{Binding PageTitle}" 
                    Style="{StaticResource TitleLabel}" 
                    HorizontalOptions="Center"
                    Margin="0,0,0,10"/>
@@ -78,7 +85,8 @@
                                Placeholder="0"
                                Keyboard="Numeric"
                                ReturnType="Next"
-                               HorizontalOptions="FillAndExpand"/>
+                               HorizontalOptions="FillAndExpand"
+                               IsEnabled="{Binding IsEditMode, Converter={StaticResource InvertedBoolConverter}}"/>
                     </HorizontalStackLayout>
 
                     <HorizontalStackLayout Spacing="10">
@@ -124,7 +132,7 @@
             <!-- Botones de acción -->
             <VerticalStackLayout Grid.Row="5" Spacing="10" Margin="0,20,0,20">
                 <Button x:Name="btnGuardar"
-                        Text="Guardar Repuesto"
+                        Text="{Binding ActionButtonText}"
                         Style="{StaticResource PrimaryButton}"
                         Clicked="btnGuardar_Clicked"/>
 
