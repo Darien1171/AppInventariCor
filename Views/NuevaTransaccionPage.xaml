@@ -2,6 +2,8 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:converters="clr-namespace:AppInventariCor.Converters"
+             xmlns:behaviors="clr-namespace:AppInventariCor.Behaviors"
+             xmlns:models="clr-namespace:AppInventariCor.Models"
              x:Class="AppInventariCor.Views.NuevaTransaccionPage"
              Title="Nueva Transacción">
 
@@ -10,6 +12,7 @@
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
             <converters:StringToBoolConverter x:Key="StringToBoolConverter"/>
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <converters:RepuestoSelectedConverter x:Key="RepuestoSelectedConverter"/>
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -29,7 +32,7 @@
 
         <!-- Contenido principal (cambia según el paso) -->
         <Grid Grid.Row="1">
-            <!-- Paso 1: Selección de vehículo - VERSIÓN SIMPLIFICADA -->
+            <!-- Paso 1: Selección de vehículo -->
             <Grid IsVisible="{Binding IsStep1Visible}" RowDefinitions="Auto,*">
                 <Label Text="Seleccione el vehículo:" 
                        Margin="0,0,0,12"/>
@@ -109,52 +112,49 @@
                 </Frame>
             </Grid>
 
-            <!-- [RESTO DEL CÓDIGO PERMANECE IGUAL] -->
-            <!-- Paso 2, 3, 4 y 5 se mantienen igual que en tu implementación original -->
-
             <!-- Paso 2: Selección múltiple de repuestos -->
             <Grid IsVisible="{Binding IsStep2Visible}" RowDefinitions="Auto,Auto,*,Auto">
                 <Label Text="Seleccione los repuestos:" 
-           Margin="0,0,0,12"/>
+                       Margin="0,0,0,12"/>
 
                 <!-- Contador de repuestos seleccionados -->
                 <Label Grid.Row="1" 
-           Text="{Binding SelectedRepuestos.Count, StringFormat='Repuestos seleccionados: {0}'}" 
-           FontAttributes="Bold"
-           Margin="0,0,0,8"/>
+                       Text="{Binding SelectedRepuestos.Count, StringFormat='Repuestos seleccionados: {0}'}" 
+                       FontAttributes="Bold"
+                       Margin="0,0,0,8"/>
 
                 <Grid RowDefinitions="Auto,*" Grid.Row="2">
                     <Grid ColumnDefinitions="*,Auto">
                         <SearchBar Placeholder="Buscar repuesto por código o nombre" 
-                      Text="{Binding RepuestoSearchQuery}"
-                      SearchCommand="{Binding RepuestoSearchCommand}"/>
+                                  Text="{Binding RepuestoSearchQuery}"
+                                  SearchCommand="{Binding RepuestoSearchCommand}"/>
                         <Button Grid.Column="1" 
-                   Text="Escanear" 
-                   Command="{Binding ScanCommand}"
-                   Style="{StaticResource SecondaryButton}"/>
+                                Text="Escanear" 
+                                Command="{Binding ScanCommand}"
+                                Style="{StaticResource SecondaryButton}"/>
                     </Grid>
 
                     <CollectionView Grid.Row="1" 
-                       ItemsSource="{Binding RepuestosFiltrados}"
-                       SelectionMode="None">
+                                   ItemsSource="{Binding RepuestosFiltrados}"
+                                   SelectionMode="None">
                         <CollectionView.EmptyView>
                             <Label Text="No se encontraron repuestos. Intente con otra búsqueda."
-                      HorizontalOptions="Center"
-                      VerticalOptions="Center"
-                      Margin="0,20"/>
+                                  HorizontalOptions="Center"
+                                  VerticalOptions="Center"
+                                  Margin="0,20"/>
                         </CollectionView.EmptyView>
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
                                 <Grid Padding="0,5">
                                     <Frame x:Name="repuestoFrame"
-                              BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray800}}"
-                              BorderColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}">
+                                          BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray800}}"
+                                          BorderColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}">
 
                                         <!-- Detección de selección mediante conversor personalizado -->
                                         <Frame.Triggers>
                                             <DataTrigger TargetType="Frame"
-                                           Binding="{Binding ., Converter={StaticResource RepuestoSelectedConverter}, ConverterParameter={Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectedRepuestos}}"
-                                           Value="True">
+                                                       Binding="{Binding ., Converter={StaticResource RepuestoSelectedConverter}, ConverterParameter={Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectedRepuestos}}"
+                                                       Value="True">
                                                 <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}" />
                                                 <Setter Property="BorderColor" Value="{StaticResource Primary}" />
                                             </DataTrigger>
@@ -164,34 +164,33 @@
                                             <!-- Información del repuesto -->
                                             <StackLayout Grid.Column="0" Spacing="4">
                                                 <Label Text="{Binding Nombre}" 
-                                          FontSize="16" 
-                                          FontAttributes="Bold"/>
+                                                      FontSize="16" 
+                                                      FontAttributes="Bold"/>
                                                 <Label Text="{Binding Codigo}" 
-                                          FontSize="13" 
-                                          TextColor="{StaticResource Gray500}"/>
+                                                      FontSize="13" 
+                                                      TextColor="{StaticResource Gray500}"/>
                                                 <Grid ColumnDefinitions="Auto,*">
                                                     <Label Text="{Binding Cantidad, StringFormat='Stock: {0}'}" FontSize="13"/>
                                                     <Label Grid.Column="1" 
-                                              Text="agotado" 
-                                              Margin="8,0,0,0"
-                                              TextColor="{StaticResource HighlightRed}"
-                                              IsVisible="{Binding Disponible, Converter={StaticResource InvertedBoolConverter}}"/>
+                                                          Text="agotado" 
+                                                          Margin="8,0,0,0"
+                                                          TextColor="{StaticResource HighlightRed}"
+                                                          IsVisible="{Binding Disponible, Converter={StaticResource InvertedBoolConverter}}"/>
                                                 </Grid>
                                                 <Label Text="{Binding Precio, StringFormat='Precio: ${0:N2}'}" 
-                                          FontSize="13" 
-                                          FontAttributes="Bold"/>
+                                                      FontSize="13" 
+                                                      FontAttributes="Bold"/>
                                             </StackLayout>
 
                                             <!-- Botón Agregar/Quitar (cambia según esté seleccionado o no) -->
                                             <Button Grid.Column="1"
-                                        Text="{Binding ., Converter={StaticResource RepuestoSelectedConverter}, ConverterParameter={Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectedRepuestos}, StringFormat='{0}'}"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ToggleRepuestoCommand}"
-                                        CommandParameter="{Binding .}"
-                                        IsEnabled="{Binding Disponible}"
-                                        BackgroundColor="{Binding ., Converter={StaticResource RepuestoSelectedConverter}, ConverterParameter={Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectedRepuestos}, ConverterParameter2='ButtonColor'}"
-                                        VerticalOptions="Center"
-                                        HeightRequest="40"
-                                        Padding="10,0"/>
+                                                    Text="{Binding ., Converter={StaticResource RepuestoSelectedConverter}, ConverterParameter={Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectedRepuestos}}"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ToggleRepuestoCommand}"
+                                                    CommandParameter="{Binding .}"
+                                                    IsEnabled="{Binding Disponible}"
+                                                    VerticalOptions="Center"
+                                                    HeightRequest="40"
+                                                    Padding="10,0"/>
                                         </Grid>
                                     </Frame>
                                 </Grid>
@@ -202,14 +201,14 @@
 
                 <!-- Lista de repuestos seleccionados -->
                 <Frame Grid.Row="3" 
-          IsVisible="{Binding HasSelectedRepuestos}"
-          Margin="0,10,0,0"
-          BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
-          BorderColor="{StaticResource Primary}">
+                      IsVisible="{Binding HasSelectedRepuestos}"
+                      Margin="0,10,0,0"
+                      BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                      BorderColor="{StaticResource Primary}">
                     <VerticalStackLayout Spacing="8">
                         <Label Text="Repuestos seleccionados:" FontAttributes="Bold"/>
                         <CollectionView ItemsSource="{Binding SelectedRepuestos}"
-                           HeightRequest="120">
+                                       HeightRequest="120">
                             <CollectionView.ItemTemplate>
                                 <DataTemplate>
                                     <Grid Padding="5" ColumnDefinitions="*,Auto">
@@ -218,13 +217,13 @@
                                             <Label Text="{Binding Codigo}" FontSize="12" TextColor="{StaticResource Gray500}"/>
                                         </StackLayout>
                                         <Button Grid.Column="1"
-                                    Text="Quitar"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveRepuestoCommand}"
-                                    CommandParameter="{Binding .}"
-                                    HeightRequest="30"
-                                    WidthRequest="60"
-                                    Padding="0"
-                                    FontSize="12"/>
+                                                Text="Quitar"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveRepuestoCommand}"
+                                                CommandParameter="{Binding .}"
+                                                HeightRequest="30"
+                                                WidthRequest="60"
+                                                Padding="0"
+                                                FontSize="12"/>
                                     </Grid>
                                 </DataTemplate>
                             </CollectionView.ItemTemplate>
@@ -233,7 +232,7 @@
                 </Frame>
             </Grid>
 
-            <!-- Paso 3: Cantidad y detalles de la venta - MODIFICADO para múltiples repuestos -->
+            <!-- Paso 3: Cantidad y detalles de la venta - Mejorado -->
             <ScrollView IsVisible="{Binding IsStep3Visible}">
                 <VerticalStackLayout Spacing="16">
                     <!-- Información del vehículo -->
@@ -255,62 +254,73 @@
                             <Label Text="Repuestos seleccionados" FontAttributes="Bold" Margin="0,0,0,8"/>
 
                             <CollectionView ItemsSource="{Binding SelectedRepuestos}"
-                               HeightRequest="{Binding SelectedRepuestos.Count, Converter={StaticResource ListHeightConverter}}">
+                               HeightRequest="250">
                                 <CollectionView.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid ColumnDefinitions="*, Auto" Padding="0,8" RowDefinitions="Auto,Auto">
+                                        <Grid Margin="0,5" Padding="10" BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray800}}">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Información del repuesto - Diseño mejorado -->
                                             <VerticalStackLayout Grid.Column="0" Spacing="4">
-                                                <Label Text="{Binding Nombre}" FontAttributes="Bold"/>
-                                                <Label Text="{Binding Codigo}" TextColor="{StaticResource Gray500}"/>
-                                                <StackLayout Orientation="Horizontal" Spacing="8">
-                                                    <Label Text="{Binding Precio, StringFormat='Precio: ${0:N2}'}" 
-                                               FontAttributes="Bold"/>
-                                                    <Label Text="{Binding Cantidad, StringFormat='Stock: {0}'}" 
-                                               TextColor="{StaticResource Gray500}"/>
-                                                </StackLayout>
+                                                <Label Text="{Binding Nombre}" FontAttributes="Bold" FontSize="16"/>
+                                                <HorizontalStackLayout>
+                                                    <Label Text="Código: " FontAttributes="Bold" FontSize="13"/>
+                                                    <Label Text="{Binding Codigo}" FontSize="13" TextColor="{StaticResource Gray600}"/>
+                                                </HorizontalStackLayout>
+                                                <HorizontalStackLayout>
+                                                    <Label Text="Precio: " FontAttributes="Bold" FontSize="13"/>
+                                                    <Label Text="{Binding Precio, StringFormat='${0:N2}'}" FontSize="13" TextColor="{StaticResource Gray600}"/>
+                                                </HorizontalStackLayout>
+                                                <HorizontalStackLayout>
+                                                    <Label Text="Stock disponible: " FontAttributes="Bold" FontSize="13"/>
+                                                    <Label Text="{Binding Cantidad}" FontSize="13" TextColor="{StaticResource Gray600}"/>
+                                                </HorizontalStackLayout>
                                             </VerticalStackLayout>
 
-                                            <StackLayout Grid.Column="1" VerticalOptions="Center" Spacing="4">
-                                                <Label Text="Cantidad:" HorizontalOptions="Center"/>
-                                                <Grid ColumnDefinitions="Auto,*,Auto">
-                                                    <Button Text="-" 
-                                                Grid.Column="0" 
-                                                WidthRequest="40"
-                                                HeightRequest="40"
-                                                Padding="0"
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DecrementarCantidadCommand}"
-                                                CommandParameter="{Binding .}"/>
+                                            <!-- Control de cantidad - Mejorado visualmente -->
+                                            <Frame Grid.Column="1" BorderColor="{StaticResource Gray300}" BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource Gray700}}" Padding="8,4" CornerRadius="6">
+                                                <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                                                    <Label Text="Cantidad" HorizontalOptions="Center" FontAttributes="Bold"/>
+                                                    <HorizontalStackLayout Spacing="0">
+                                                        <Button Text="-" 
+                                                    WidthRequest="40"
+                                                    HeightRequest="40"
+                                                    Padding="0"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DecrementarCantidadCommand}"
+                                                    CommandParameter="{Binding .}"/>
 
-                                                    <Entry Grid.Column="1" 
-                                               Text="{Binding ., Converter={StaticResource RepuestoCantidadConverter}, ConverterParameter={Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.CantidadesRepuestos}}"
-                                               Keyboard="Numeric"
-                                               WidthRequest="60"
-                                               HorizontalTextAlignment="Center"
-                                               ReturnType="Done">
-                                                        <Entry.Behaviors>
-                                                            <behaviors:EntryCompletedBehavior 
-                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.UpdateCantidadCommand}" 
-                                                    CommandParameter="{Binding}"/>
-                                                        </Entry.Behaviors>
-                                                    </Entry>
+                                                        <Entry x:Name="CantidadEntry"
+                                                   WidthRequest="60"
+                                                   HorizontalTextAlignment="Center"
+                                                   ReturnType="Done"
+                                                   Keyboard="Numeric"
+                                                   Completed="Entry_Completed"
+                                                   ClassId="{Binding Id}"/>
 
-                                                    <Button Text="+" 
-                                                Grid.Column="2" 
-                                                WidthRequest="40"
-                                                HeightRequest="40"
-                                                Padding="0"
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.IncrementarCantidadCommand}"
-                                                CommandParameter="{Binding .}"/>
-                                                </Grid>
+                                                        <Button Text="+" 
+                                                    WidthRequest="40"
+                                                    HeightRequest="40"
+                                                    Padding="0"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.IncrementarCantidadCommand}"
+                                                    CommandParameter="{Binding .}"/>
+                                                    </HorizontalStackLayout>
+                                                </VerticalStackLayout>
+                                            </Frame>
+
+                                            <!-- Línea subtotal -->
+                                            <StackLayout Grid.Row="1" Grid.ColumnSpan="2" HorizontalOptions="End" Margin="0,10,0,0">
+                                                <Label x:Name="LabelSubtotal" 
+                                           FontAttributes="Bold"
+                                           FontSize="15"
+                                           TextColor="{StaticResource Primary}"/>
                                             </StackLayout>
-
-                                            <!-- Subtotal -->
-                                            <Label Grid.Row="1" 
-                                       Grid.ColumnSpan="2"
-                                       Text="{Binding ., Converter={StaticResource RepuestoSubtotalConverter}, ConverterParameter={Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.CantidadesRepuestos}}"
-                                       HorizontalOptions="End"
-                                       FontAttributes="Bold"
-                                       Margin="0,8,0,0"/>
                                         </Grid>
                                     </DataTemplate>
                                 </CollectionView.ItemTemplate>
@@ -319,18 +329,19 @@
                             <!-- Total general -->
                             <BoxView HeightRequest="1" 
                          BackgroundColor="{StaticResource Gray300}"
-                         Margin="0,8"/>
+                         Margin="0,16"/>
 
-                            <Grid ColumnDefinitions="*,Auto">
+                            <Grid ColumnDefinitions="*,Auto" BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}" Padding="10">
                                 <Label Text="TOTAL" 
                            Grid.Column="0"
                            FontAttributes="Bold"
-                           FontSize="16"/>
+                           FontSize="18"/>
 
                                 <Label Text="{Binding ValorTotal, StringFormat='${0:N2}'}" 
                            Grid.Column="1"
                            FontAttributes="Bold"
-                           FontSize="16"/>
+                           FontSize="18"
+                           TextColor="{StaticResource HighlightGreen}"/>
                             </Grid>
                         </VerticalStackLayout>
                     </Frame>
@@ -350,12 +361,64 @@
 
             <!-- Paso 4: Captura de evidencia fotográfica -->
             <ScrollView IsVisible="{Binding IsStep4Visible}">
-                <!-- Contenido del paso 4 -->
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Agregue evidencia fotográfica (opcional)" Style="{StaticResource SectionLabel}"/>
+
+                    <Frame Style="{StaticResource CardFrame}">
+                        <VerticalStackLayout Spacing="12">
+                            <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
+                                <Button Text="Tomar foto" Command="{Binding TakePictureCommand}" Style="{StaticResource SecondaryButton}"/>
+                                <Button Text="Seleccionar imagen" Command="{Binding PickImageCommand}" Style="{StaticResource SecondaryButton}"/>
+                            </HorizontalStackLayout>
+
+                            <Label Text="Imágenes seleccionadas:" FontAttributes="Bold" IsVisible="{Binding HasEvidenceImages}"/>
+                            <CollectionView ItemsSource="{Binding EvidenceImages}" 
+                                           IsVisible="{Binding HasEvidenceImages}"
+                                           HeightRequest="150">
+                                <CollectionView.ItemsLayout>
+                                    <LinearItemsLayout Orientation="Horizontal" ItemSpacing="10"/>
+                                </CollectionView.ItemsLayout>
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Frame WidthRequest="100" HeightRequest="100" Padding="0">
+                                            <Grid>
+                                                <Image Source="{Binding}" Aspect="AspectFill"/>
+                                                <Button Text="X" 
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveImageCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        HeightRequest="30" WidthRequest="30"
+                                                        FontSize="10" Padding="0"
+                                                        HorizontalOptions="End" VerticalOptions="Start"
+                                                        CornerRadius="15" Margin="5"/>
+                                            </Grid>
+                                        </Frame>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </VerticalStackLayout>
+                    </Frame>
+                </VerticalStackLayout>
             </ScrollView>
 
             <!-- Paso 5: Confirmación -->
             <ScrollView IsVisible="{Binding IsStep5Visible}">
-                <!-- Contenido del paso 5 -->
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Confirmar Transacción" Style="{StaticResource SectionLabel}"/>
+
+                    <Frame Style="{StaticResource CardFrame}">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Resumen de la transacción" FontAttributes="Bold"/>
+                            <Label Text="{Binding SelectedVehiculo.NumeroPlaca, StringFormat='Vehículo: {0}'}"/>
+                            <Label Text="{Binding SelectedRepuestos.Count, StringFormat='Repuestos seleccionados: {0} items'}"/>
+                            <Label Text="{Binding ValorTotal, StringFormat='Valor total: ${0:N2}'}" FontAttributes="Bold"/>
+
+                            <Button Text="Confirmar Transacción" 
+                                    Command="{Binding ConfirmTransactionCommand}"
+                                    Style="{StaticResource PrimaryButton}"
+                                    Margin="0,20,0,0"/>
+                        </VerticalStackLayout>
+                    </Frame>
+                </VerticalStackLayout>
             </ScrollView>
         </Grid>
 

@@ -396,20 +396,56 @@ namespace AppInventariCor.ViewModels
             }
         }
 
-        private void InitializeCantidades()
+        public void UpdateCantidadDirecto(Repuesto repuesto, int cantidad)
         {
-            // Inicializar diccionario de cantidades para cada repuesto seleccionado
-            foreach (var repuesto in SelectedRepuestos)
-            {
-                if (!CantidadesRepuestos.ContainsKey(repuesto.Id))
-                {
-                    CantidadesRepuestos[repuesto.Id] = 1; // Valor predeterminado
-                }
-            }
+            if (repuesto == null || cantidad <= 0)
+                return;
 
-            OnPropertyChanged(nameof(ValorTotal));
+            // Validar que no exceda el stock
+            if (cantidad <= repuesto.Cantidad)
+            {
+                CantidadesRepuestos[repuesto.Id] = cantidad;
+                OnPropertyChanged(nameof(ValorTotal));
+                OnPropertyChanged(nameof(CanGoForward));
+                CheckStockWarning();
+            }
+            else
+            {
+                // Ajustar al máximo disponible
+                CantidadesRepuestos[repuesto.Id] = repuesto.Cantidad;
+                OnPropertyChanged(nameof(ValorTotal));
+
+                // Notificar al usuario
+                Application.Current.MainPage.DisplayAlert(
+                    "Advertencia",
+                    $"La cantidad solicitada excede el stock disponible ({repuesto.Cantidad}). Se ha ajustado al máximo disponible.",
+                    "OK");
+            }
         }
 
+        private void InitializeCantidades()
+        {
+            try
+            {
+                // Reinicializar el diccionario para evitar problemas
+                _cantidadesRepuestos = new Dictionary<int, int>();
+
+                // Inicializar cantidades para cada repuesto seleccionado
+                foreach (var repuesto in SelectedRepuestos)
+                {
+                    _cantidadesRepuestos[repuesto.Id] = 1; // Siempre valor predeterminado 1
+                }
+
+                OnPropertyChanged(nameof(CantidadesRepuestos));
+                OnPropertyChanged(nameof(ValorTotal));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[ERROR] Error en InitializeCantidades: {ex.Message}");
+            }
+        }
+
+        // Método actualizado para recibir un Tuple<Repuesto, string>
         private void UpdateCantidad(Tuple<Repuesto, string> data)
         {
             if (data == null || data.Item1 == null || string.IsNullOrEmpty(data.Item2))
@@ -443,7 +479,7 @@ namespace AppInventariCor.ViewModels
             }
         }
 
-        private void IncrementarCantidad(Repuesto repuesto)
+        public void IncrementarCantidad(Repuesto repuesto)
         {
             if (repuesto == null || !CantidadesRepuestos.TryGetValue(repuesto.Id, out int cantidadActual))
                 return;
@@ -453,7 +489,11 @@ namespace AppInventariCor.ViewModels
             {
                 CantidadesRepuestos[repuesto.Id] = cantidadActual + 1;
                 OnPropertyChanged(nameof(ValorTotal));
+                OnPropertyChanged(nameof(CantidadesRepuestos)); // Añadido
                 CheckStockWarning();
+
+                // Notificar a la vista que debe actualizar los valores
+                OnPropertyChanged("ActualizarCantidades");
             }
             else
             {
@@ -465,7 +505,8 @@ namespace AppInventariCor.ViewModels
             }
         }
 
-        private void DecrementarCantidad(Repuesto repuesto)
+
+        public void DecrementarCantidad(Repuesto repuesto)
         {
             if (repuesto == null || !CantidadesRepuestos.TryGetValue(repuesto.Id, out int cantidadActual))
                 return;
@@ -474,7 +515,11 @@ namespace AppInventariCor.ViewModels
             {
                 CantidadesRepuestos[repuesto.Id] = cantidadActual - 1;
                 OnPropertyChanged(nameof(ValorTotal));
+                OnPropertyChanged(nameof(CantidadesRepuestos)); // Añadido
                 CheckStockWarning();
+
+                // Notificar a la vista que debe actualizar los valores
+                OnPropertyChanged("ActualizarCantidades");
             }
         }
 

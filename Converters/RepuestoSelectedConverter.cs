@@ -19,7 +19,7 @@ namespace AppInventariCor.Converters
             }
 
             // Verificar si es un botón que necesita texto
-            if (targetType == typeof(string))
+            if (targetType == typeof(string) && !(parameter is string paramString && paramString == "ButtonColor"))
             {
                 bool isSelected = IsRepuestoSelected(value, parameter);
                 return isSelected ? "Quitar" : "Agregar";
