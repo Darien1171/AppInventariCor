@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:AppInventariCor.Converters"
+             x:Class="AppInventariCor.Views.NuevaTransaccionPage"
+             Title="Nueva Transacción">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+            <converters:StringToBoolConverter x:Key="StringToBoolConverter"/>
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="16" RowSpacing="16">
+        <!-- Cabecera con barra de progreso -->
+        <Grid Grid.Row="0" RowDefinitions="Auto,Auto" Margin="0,0,0,8">
+            <ProgressBar x:Name="progressWizard" Progress="{Binding CurrentProgress}" 
+                         ProgressColor="{StaticResource Black}" 
+                         HeightRequest="6" 
+                         Margin="0,0,0,12"/>
+
+            <Label Grid.Row="1" Text="{Binding CurrentStepTitle}" 
+                   FontSize="20" 
+                   FontAttributes="Bold" 
+                   HorizontalOptions="Center"/>
+        </Grid>
+
+        <!-- Contenido principal (cambia según el paso) -->
+        <Grid Grid.Row="1">
+            <!-- Paso 1: Selección de vehículo -->
+            <Grid IsVisible="{Binding IsStep1Visible}" RowDefinitions="Auto,*">
+                <Label Text="Seleccione el vehículo:" 
+                       Margin="0,0,0,12"/>
+
+                <Grid RowDefinitions="Auto,*" Grid.Row="1">
+                    <SearchBar Placeholder="Buscar vehículo por placa o número interno" 
+                               Text="{Binding VehiculoSearchQuery}"
+                               SearchCommand="{Binding VehiculoSearchCommand}"/>
+
+                    <Frame Grid.Row="1" Style="{StaticResource CardFrame}" Padding="0" HasShadow="False">
+                        <CollectionView ItemsSource="{Binding VehiculosFiltrados}"
+                                        SelectionMode="Single"
+                                        SelectedItem="{Binding SelectedVehiculo}">
+                            <CollectionView.EmptyView>
+                                <Label Text="No se encontraron vehículos. Intente con otra búsqueda."
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"
+                                       Margin="0,20"/>
+                            </CollectionView.EmptyView>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Frame Margin="0,4" 
+                                           Padding="0" 
+                                           Style="{StaticResource CardFrame}"
+                                           HasShadow="True">
+                                        <Grid>
+                                            <BoxView WidthRequest="6" 
+                                                     BackgroundColor="{StaticResource Gray400}"
+                                                     HorizontalOptions="Start"
+                                                     VerticalOptions="Fill" />
+
+                                            <Grid Margin="10,0,0,0" Padding="8,12" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                                <VerticalStackLayout Grid.Column="0" 
+                                                                     Spacing="3"
+                                                                     VerticalOptions="Center">
+                                                    <Label Text="{Binding NumeroPlaca}" 
+                                                           FontSize="16" 
+                                                           FontAttributes="Bold"
+                                                           LineBreakMode="TailTruncation"/>
+
+                                                    <Label Text="{Binding NumeroInterno, StringFormat='Interno: #{0}'}" 
+                                                           FontSize="13" 
+                                                           TextColor="{StaticResource Gray500}"
+                                                           Margin="0,0,0,2"/>
+
+                                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                                                        <Label Text="{Binding Marca}" 
+                                                               Grid.Column="0"
+                                                               FontSize="13"/>
+
+                                                        <Label Text="{Binding Modelo}" 
+                                                               Grid.Column="1"
+                                                               FontSize="13"
+                                                               TextColor="{StaticResource Gray600}"
+                                                               LineBreakMode="TailTruncation"/>
+                                                    </Grid>
+                                                </VerticalStackLayout>
+
+                                                <Label Grid.Column="1" 
+                                                       Text="Seleccionar"
+                                                       VerticalOptions="Center"
+                                                       TextColor="{StaticResource Gray600}"/>
+                                            </Grid>
+                                        </Grid>
+                                    </Frame>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </Frame>
+                </Grid>
+            </Grid>
+
+            <!-- Paso 2: Selección de repuesto -->
+            <Grid IsVisible="{Binding IsStep2Visible}" RowDefinitions="Auto,*">
+                <Label Text="Seleccione el repuesto:" 
+                       Margin="0,0,0,12"/>
+
+                <Grid RowDefinitions="Auto,*" Grid.Row="1">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <SearchBar Placeholder="Buscar repuesto por código o nombre" 
+                                   Text="{Binding RepuestoSearchQuery}"
+                                   SearchCommand="{Binding RepuestoSearchCommand}"/>
+                        <Button Grid.Column="1" 
+                                Text="Escanear" 
+                                Command="{Binding ScanCommand}"
+                                Style="{StaticResource SecondaryButton}"/>
+                    </Grid>
+
+                    <Frame Grid.Row="1" Style="{StaticResource CardFrame}" Padding="0" HasShadow="False">
+                        <CollectionView ItemsSource="{Binding RepuestosFiltrados}"
+                                        SelectionMode="Single"
+                                        SelectedItem="{Binding SelectedRepuesto}">
+                            <CollectionView.EmptyView>
+                                <Label Text="No se encontraron repuestos. Intente con otra búsqueda."
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"
+                                       Margin="0,20"/>
+                            </CollectionView.EmptyView>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Padding="16,12" ColumnDefinitions="*,Auto">
+                                        <VerticalStackLayout>
+                                            <Label Text="{Binding Nombre}" FontAttributes="Bold" FontSize="16"/>
+                                            <Label Text="{Binding Codigo}" TextColor="{StaticResource Gray500}"/>
+                                            <Grid ColumnDefinitions="Auto,*">
+                                                <Label Text="{Binding Cantidad, StringFormat='Stock: {0}'}" FontSize="13"/>
+                                                <Label Grid.Column="1" 
+                                                       Text="{Binding Disponible, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter='agotado'}" 
+                                                       Margin="8,0,0,0"
+                                                       TextColor="{StaticResource HighlightRed}"
+                                                       IsVisible="{Binding Disponible, Converter={StaticResource InvertedBoolConverter}}"/>
+                                            </Grid>
+                                        </VerticalStackLayout>
+                                        <Label Grid.Column="1" 
+                                               Text="{Binding Precio, StringFormat='${0:N2}'}" 
+                                               VerticalOptions="Center"
+                                               FontAttributes="Bold"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </Frame>
+                </Grid>
+            </Grid>
+
+            <!-- Paso 3: Cantidad y detalles de la venta -->
+            <ScrollView IsVisible="{Binding IsStep3Visible}">
+                <VerticalStackLayout Spacing="16">
+                    <!-- Información del vehículo -->
+                    <Frame Style="{StaticResource CardFrame}">
+                        <VerticalStackLayout>
+                            <Label Text="Vehículo" FontAttributes="Bold" Margin="0,0,0,8"/>
+                            <Label Text="{Binding SelectedVehiculo.NumeroPlaca}" FontSize="18"/>
+                            <Label Text="{Binding SelectedVehiculo.NumeroInterno, StringFormat='Interno: {0}'}" TextColor="{StaticResource Gray500}"/>
+                            <StackLayout Orientation="Horizontal">
+                                <Label Text="{Binding SelectedVehiculo.Marca}" TextColor="{StaticResource Gray500}"/>
+                                <Label Text="{Binding SelectedVehiculo.Modelo}" TextColor="{StaticResource Gray500}" Margin="5,0,0,0"/>
+                            </StackLayout>
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Información del repuesto -->
+                    <Frame Style="{StaticResource CardFrame}">
+                        <VerticalStackLayout>
+                            <Label Text="Repuesto" FontAttributes="Bold" Margin="0,0,0,8"/>
+                            <Label Text="{Binding SelectedRepuesto.Nombre}" FontSize="18"/>
+                            <Label Text="{Binding SelectedRepuesto.Codigo}" TextColor="{StaticResource Gray500}"/>
+                            <Label Text="{Binding SelectedRepuesto.Cantidad, StringFormat='Stock disponible: {0} unidades'}"/>
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Detalles de la venta -->
+                    <Frame Style="{StaticResource CardFrame}">
+                        <VerticalStackLayout>
+                            <Label Text="Detalles de la venta" FontAttributes="Bold" Margin="0,0,0,8"/>
+
+                            <Label Text="Cantidad" Margin="0,8,0,0"/>
+                            <Entry Placeholder="Ingrese la cantidad"
+                                   Text="{Binding CantidadTransaccion}"
+                                   Keyboard="Numeric"/>
+
+                            <Label Text="Precio unitario" Margin="0,16,0,0"/>
+                            <Entry Text="{Binding PrecioUnitario, StringFormat='{0:N2}'}"
+                                   Keyboard="Numeric"
+                                   IsReadOnly="True"/>
+
+                            <Grid ColumnDefinitions="*,Auto" Margin="0,16,0,0">
+                                <Label Text="Valor total:" 
+                                       FontAttributes="Bold" 
+                                       VerticalOptions="Center"/>
+                                <Label Grid.Column="1" 
+                                       Text="{Binding ValorTotal, StringFormat='${0:N2}'}" 
+                                       FontSize="18" 
+                                       FontAttributes="Bold"
+                                       VerticalOptions="Center"/>
+                            </Grid>
+
+                            <Label Text="Observaciones" Margin="0,16,0,0"/>
+                            <Editor Placeholder="Ingrese observaciones (opcional)"
+                                    Text="{Binding Observaciones}"
+                                    HeightRequest="100"
+                                    AutoSize="TextChanges"/>
+                        </VerticalStackLayout>
+                    </Frame>
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <!-- Paso 4: Captura de evidencia fotográfica -->
+            <ScrollView IsVisible="{Binding IsStep4Visible}">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Captura de evidencia fotográfica (opcional)" 
+                           Margin="0,0,0,12"/>
+
+                    <Button Text="Tomar Fotografía" 
+                            Command="{Binding TakePictureCommand}"
+                            Style="{StaticResource PrimaryButton}"/>
+
+                    <Button Text="Seleccionar Imagen de Galería" 
+                            Command="{Binding PickImageCommand}"
+                            Style="{StaticResource SecondaryButton}"/>
+
+                    <!-- Contenedor para las imágenes -->
+                    <Frame Style="{StaticResource CardFrame}" IsVisible="{Binding HasEvidenceImages}">
+                        <VerticalStackLayout>
+                            <Label Text="Imágenes adjuntas" FontAttributes="Bold" Margin="0,0,0,8"/>
+                            <CollectionView ItemsSource="{Binding EvidenceImages}"
+                                            ItemsLayout="HorizontalList">
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Padding="8">
+                                            <Image Source="{Binding}"
+                                                   Aspect="AspectFill"
+                                                   WidthRequest="120"
+                                                   HeightRequest="120"/>
+                                            <Button Text="X"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveImageCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    BackgroundColor="Red"
+                                                    TextColor="White"
+                                                    FontAttributes="Bold"
+                                                    WidthRequest="30"
+                                                    HeightRequest="30"
+                                                    CornerRadius="15"
+                                                    HorizontalOptions="End"
+                                                    VerticalOptions="Start"
+                                                    Margin="0,0,8,0"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Campo para firma -->
+                    <Frame Style="{StaticResource CardFrame}">
+                        <VerticalStackLayout>
+                            <Label Text="Firma de recepción" FontAttributes="Bold" Margin="0,0,0,8"/>
+                            <!-- Aquí iría un control para capturar la firma -->
+                            <Grid HeightRequest="150" BackgroundColor="{StaticResource Gray100}">
+                                <!-- Placeholder para el control de firma -->
+                                <Label Text="Espacio para la firma"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"
+                                       TextColor="{StaticResource Gray500}"/>
+                            </Grid>
+                            <Button Text="Limpiar Firma" 
+                                    Command="{Binding ClearSignatureCommand}"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Margin="0,8,0,0"/>
+                        </VerticalStackLayout>
+                    </Frame>
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <!-- Paso 5: Confirmación -->
+            <ScrollView IsVisible="{Binding IsStep5Visible}">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Resumen de la transacción" 
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"
+                           Margin="0,0,0,16"/>
+
+                    <!-- Resumen de la venta -->
+                    <Frame Style="{StaticResource CardFrame}">
+                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="12">
+                            <Grid ColumnDefinitions="Auto,*">
+                                <Label Text="Vehículo:" FontAttributes="Bold"/>
+                                <Label Grid.Column="1" Text="{Binding SelectedVehiculo.NumeroPlaca}"/>
+                            </Grid>
+
+                            <Grid Grid.Row="1" ColumnDefinitions="Auto,*">
+                                <Label Text="Repuesto:" FontAttributes="Bold"/>
+                                <Label Grid.Column="1" Text="{Binding SelectedRepuesto.Nombre}"/>
+                            </Grid>
+
+                            <Grid Grid.Row="2" ColumnDefinitions="Auto,*">
+                                <Label Text="Código:" FontAttributes="Bold"/>
+                                <Label Grid.Column="1" Text="{Binding SelectedRepuesto.Codigo}"/>
+                            </Grid>
+
+                            <Grid Grid.Row="3" ColumnDefinitions="Auto,*">
+                                <Label Text="Cantidad:" FontAttributes="Bold"/>
+                                <Label Grid.Column="1" Text="{Binding CantidadTransaccion}"/>
+                            </Grid>
+
+                            <Grid Grid.Row="4" ColumnDefinitions="Auto,*">
+                                <Label Text="Precio unitario:" FontAttributes="Bold"/>
+                                <Label Grid.Column="1" Text="{Binding PrecioUnitario, StringFormat='${0:N2}'}"/>
+                            </Grid>
+
+                            <Grid Grid.Row="5" ColumnDefinitions="Auto,*">
+                                <Label Text="Valor Total:" FontAttributes="Bold"/>
+                                <Label Grid.Column="1" Text="{Binding ValorTotal, StringFormat='${0:N2}'}" FontAttributes="Bold"/>
+                            </Grid>
+                        </Grid>
+                    </Frame>
+
+                    <!-- Observaciones -->
+                    <Frame Style="{StaticResource CardFrame}" IsVisible="{Binding HasObservaciones}">
+                        <VerticalStackLayout>
+                            <Label Text="Observaciones:" FontAttributes="Bold" Margin="0,0,0,8"/>
+                            <Label Text="{Binding Observaciones}"/>
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Evidencia -->
+                    <Frame Style="{StaticResource CardFrame}" IsVisible="{Binding HasEvidenceImages}">
+                        <VerticalStackLayout>
+                            <Label Text="Evidencia adjunta:" FontAttributes="Bold" Margin="0,0,0,8"/>
+                            <Label Text="{Binding EvidenceImages.Count, StringFormat='{0} imágenes'}"/>
+                            <Label Text="Se ha incluido una firma" IsVisible="{Binding HasSignature}"/>
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Advertencia de stock -->
+                    <Frame Style="{StaticResource CardFrame}" 
+                           IsVisible="{Binding ShowStockWarning}"
+                           BackgroundColor="{StaticResource HighlightYellow}">
+                        <VerticalStackLayout>
+                            <Label Text="¡Atención!" FontAttributes="Bold" Margin="0,0,0,8"/>
+                            <Label Text="Esta transacción reducirá el stock por debajo del nivel mínimo recomendado."
+                                   TextColor="{StaticResource Black}"/>
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Botón de confirmación -->
+                    <Button Text="CONFIRMAR VENTA" 
+                            Command="{Binding ConfirmTransactionCommand}"
+                            Style="{StaticResource PrimaryButton}"
+                            Margin="0,16,0,0"/>
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
+
+        <!-- Botones de navegación -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="16">
+            <Button Text="Anterior" 
+                    Command="{Binding PreviousStepCommand}"
+                    Style="{StaticResource SecondaryButton}"
+                    IsEnabled="{Binding CanGoBack}"/>
+
+            <Button Grid.Column="1" 
+                    Text="Siguiente" 
+                    Command="{Binding NextStepCommand}"
+                    Style="{StaticResource PrimaryButton}"
+                    IsEnabled="{Binding CanGoForward}"/>
+        </Grid>
+    </Grid>
+</ContentPage>

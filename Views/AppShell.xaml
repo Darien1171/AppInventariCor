@@ -37,7 +37,7 @@
 
     <FlyoutItem Title="Transacciones" Icon="swap_horiz.png">
         <ShellContent
-            ContentTemplate="{DataTemplate views:PlaceholderPage}"
+            ContentTemplate="{DataTemplate views:TransaccionesPage}"
             Route="TransaccionesPage" />
     </FlyoutItem>
 

@@ -18,6 +18,10 @@ namespace AppInventariCor
             Routing.RegisterRoute(nameof(VehiculosPage), typeof(VehiculosPage));
             Routing.RegisterRoute(nameof(VehiculoDetallePage), typeof(VehiculoDetallePage));
             Routing.RegisterRoute(nameof(AgregarVehiculoPage), typeof(AgregarVehiculoPage));
+
+            // Rutas para Transacciones
+            Routing.RegisterRoute(nameof(TransaccionesPage), typeof(TransaccionesPage));
+            Routing.RegisterRoute(nameof(NuevaTransaccionPage), typeof(NuevaTransaccionPage));
         }
     }
 }
