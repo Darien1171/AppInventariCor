@@ -31,8 +31,8 @@
 
     <FlyoutItem Title="Vehículos" Icon="directions_bus.png">
         <ShellContent
-            ContentTemplate="{DataTemplate views:PlaceholderPage}"
-            Route="VehiculosPage" />
+        ContentTemplate="{DataTemplate views:VehiculosPage}"
+        Route="VehiculosPage" />
     </FlyoutItem>
 
     <FlyoutItem Title="Transacciones" Icon="swap_horiz.png">

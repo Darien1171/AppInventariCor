@@ -2,8 +2,8 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:converters="clr-namespace:AppInventariCor.Converters"
-             x:Class="AppInventariCor.Views.AgregarRepuestoPage"
-             Title="Agregar Repuesto">
+             x:Class="AppInventariCor.Views.AgregarVehiculoPage"
+             Title="Agregar Vehículo">
 
     <ContentPage.Resources>
         <ResourceDictionary>
@@ -94,7 +94,7 @@
     </ContentPage.Resources>
 
     <ScrollView>
-        <Grid Padding="20" RowSpacing="15" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+        <Grid Padding="20" RowSpacing="15" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
 
             <!-- Título -->
             <Label Grid.Row="0" 
@@ -108,111 +108,66 @@
                 <VerticalStackLayout Spacing="15">
                     <Label Text="Información Básica" FontAttributes="Bold" FontSize="16"/>
 
-                    <Entry x:Name="txtCodigo"
-                           Placeholder="Código del repuesto *"
+                    <Entry x:Name="txtNumeroPlaca"
+                           Placeholder="Número de placa *"
                            ReturnType="Next"/>
 
-                    <Entry x:Name="txtNombre"
-                           Placeholder="Nombre del repuesto *"
-                           ReturnType="Next"/>
-
-                    <Editor x:Name="txtDescripcion"
-                            Placeholder="Descripción"
-                            AutoSize="TextChanges"
-                            MaxLength="500"
-                            HeightRequest="100"/>
-                </VerticalStackLayout>
-            </Frame>
-
-            <!-- Categorización -->
-            <Frame Grid.Row="2" Style="{StaticResource CardFrame}">
-                <VerticalStackLayout Spacing="15">
-                    <Label Text="Categorización" FontAttributes="Bold" FontSize="16"/>
-
-                    <Entry x:Name="txtCategoria"
-                           Placeholder="Categoría"
+                    <Entry x:Name="txtNumeroInterno"
+                           Placeholder="Número interno *"
                            ReturnType="Next"/>
 
                     <Entry x:Name="txtMarca"
-                           Placeholder="Marca"
+                           Placeholder="Marca *"
                            ReturnType="Next"/>
 
                     <Entry x:Name="txtModelo"
                            Placeholder="Modelo"
                            ReturnType="Next"/>
+                </VerticalStackLayout>
+            </Frame>
 
-                    <Entry x:Name="txtUbicacion"
-                           Placeholder="Ubicación en almacén"
+            <!-- Información específica -->
+            <Frame Grid.Row="2" Style="{StaticResource CardFrame}">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Información Específica" FontAttributes="Bold" FontSize="16"/>
+
+                    <Entry x:Name="txtNumeroSerie"
+                           Placeholder="Número de serie"
+                           ReturnType="Next"/>
+
+                    <Entry x:Name="txtNumeroMotor"
+                           Placeholder="Número de motor"
+                           ReturnType="Next"/>
+
+                    <HorizontalStackLayout Spacing="10">
+                        <Label Text="Año:" VerticalOptions="Center" WidthRequest="50"/>
+                        <Entry x:Name="txtAnio"
+                               Placeholder="YYYY"
+                               Keyboard="Numeric"
+                               MaxLength="4"
+                               ReturnType="Next"
+                               HorizontalOptions="FillAndExpand"/>
+                    </HorizontalStackLayout>
+
+                    <Entry x:Name="txtColor"
+                           Placeholder="Color"
                            ReturnType="Next"/>
                 </VerticalStackLayout>
             </Frame>
 
-            <!-- Inventario -->
+            <!-- Propietario -->
             <Frame Grid.Row="3" Style="{StaticResource CardFrame}">
                 <VerticalStackLayout Spacing="15">
-                    <Label Text="Información de Inventario" FontAttributes="Bold" FontSize="16"/>
+                    <Label Text="Información de Propietario" FontAttributes="Bold" FontSize="16"/>
 
-                    <HorizontalStackLayout Spacing="10">
-                        <Label Text="Precio:" VerticalOptions="Center" WidthRequest="100"/>
-                        <Entry x:Name="txtPrecio"
-                               Placeholder="0.00"
-                               Keyboard="Numeric"
-                               ReturnType="Next"
-                               HorizontalOptions="FillAndExpand"/>
-                    </HorizontalStackLayout>
-
-                    <HorizontalStackLayout Spacing="10">
-                        <Label Text="Cantidad:" VerticalOptions="Center" WidthRequest="100"/>
-                        <Entry x:Name="txtCantidad"
-                               Placeholder="0"
-                               Keyboard="Numeric"
-                               ReturnType="Next"
-                               HorizontalOptions="FillAndExpand"
-                               IsEnabled="{Binding IsEditMode, Converter={StaticResource InvertedBoolConverter}}"/>
-                    </HorizontalStackLayout>
-
-                    <HorizontalStackLayout Spacing="10">
-                        <Label Text="Stock Mínimo:" VerticalOptions="Center" WidthRequest="100"/>
-                        <Entry x:Name="txtStockMinimo"
-                               Placeholder="0"
-                               Keyboard="Numeric"
-                               ReturnType="Next"
-                               HorizontalOptions="FillAndExpand"/>
-                    </HorizontalStackLayout>
-
-                    <HorizontalStackLayout Spacing="10">
-                        <Label Text="Stock Óptimo:" VerticalOptions="Center" WidthRequest="100"/>
-                        <Entry x:Name="txtStockOptimo"
-                               Placeholder="0"
-                               Keyboard="Numeric"
-                               ReturnType="Next"
-                               HorizontalOptions="FillAndExpand"/>
-                    </HorizontalStackLayout>
-                </VerticalStackLayout>
-            </Frame>
-
-            <!-- Códigos -->
-            <Frame Grid.Row="4" Style="{StaticResource CardFrame}">
-                <VerticalStackLayout Spacing="15">
-                    <Label Text="Códigos de Identificación" FontAttributes="Bold" FontSize="16"/>
-
-                    <Entry x:Name="txtCodigoBarras"
-                           Placeholder="Código de barras"
-                           ReturnType="Next"/>
-
-                    <Entry x:Name="txtCodigoQR"
-                           Placeholder="Código QR"
+                    <Entry x:Name="txtPropietario"
+                           Placeholder="Nombre del propietario"
                            ReturnType="Done"/>
-
-                    <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
-                        <Button Text="Escanear código" Style="{StaticResource SecondaryButton}"/>
-                        <Button Text="Generar código" Style="{StaticResource SecondaryButton}"/>
-                    </HorizontalStackLayout>
                 </VerticalStackLayout>
             </Frame>
 
             <!-- Botones de acción -->
-            <VerticalStackLayout Grid.Row="5" Spacing="10" Margin="0,20,0,20">
+            <VerticalStackLayout Grid.Row="4" Spacing="10" Margin="0,20,0,20">
                 <Button x:Name="btnGuardar"
                         Text="{Binding ActionButtonText}"
                         Style="{StaticResource PrimaryButton}"

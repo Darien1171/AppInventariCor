@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:AppInventariCor.Converters"
+             x:Class="AppInventariCor.Views.VehiculoDetallePage"
+             Title="{Binding Vehiculo.NumeroPlaca}">
+
+
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <!-- Colores -->
+            <Color x:Key="Primary">#000000</Color>
+            <Color x:Key="PrimaryDark">#333333</Color>
+            <Color x:Key="PrimaryDarkText">#FFFFFF</Color>
+            <Color x:Key="Secondary">#E0E0E0</Color>
+            <Color x:Key="SecondaryDarkText">#333333</Color>
+            <Color x:Key="Tertiary">#1A1A1A</Color>
+
+            <Color x:Key="White">White</Color>
+            <Color x:Key="Black">Black</Color>
+            <Color x:Key="HighlightRed">#FF4136</Color>
+            <Color x:Key="HighlightYellow">#FFDC00</Color>
+            <Color x:Key="HighlightGreen">#2ECC40</Color>
+            <Color x:Key="OffBlack">#1f1f1f</Color>
+            <Color x:Key="OffWhite">#F5F5F5</Color>
+
+            <!-- Escala de grises -->
+            <Color x:Key="Gray100">#E1E1E1</Color>
+            <Color x:Key="Gray200">#C8C8C8</Color>
+            <Color x:Key="Gray300">#ACACAC</Color>
+            <Color x:Key="Gray400">#919191</Color>
+            <Color x:Key="Gray500">#6E6E6E</Color>
+            <Color x:Key="Gray600">#404040</Color>
+            <Color x:Key="Gray700">#333333</Color>
+            <Color x:Key="Gray800">#262626</Color>
+            <Color x:Key="Gray900">#212121</Color>
+            <Color x:Key="Gray950">#141414</Color>
+
+            <!-- Conversores -->
+            <converters:AlertLevelColorConverter x:Key="AlertLevelColorConverter"/>
+            <converters:TransactionTypeIconConverter x:Key="TransactionTypeIconConverter"/>
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+            <converters:StringToBoolConverter x:Key="StringToBoolConverter"/>
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <converters:StockLevelToBrushConverter x:Key="StockLevelToBrushConverter"/>
+            <converters:BoolToIconConverter x:Key="BoolToIconConverter"/>
+            <converters:BoolToSpanConverter x:Key="BoolToSpanConverter"/>
+
+            <!-- Estilos -->
+            <Style x:Key="PrimaryButton" TargetType="Button">
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Black}}" />
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" />
+                <Setter Property="FontFamily" Value="OpenSansRegular"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="BorderWidth" Value="0"/>
+                <Setter Property="CornerRadius" Value="4"/>
+                <Setter Property="Padding" Value="16,10"/>
+                <Setter Property="MinimumHeightRequest" Value="44"/>
+            </Style>
+
+            <Style x:Key="SecondaryButton" TargetType="Button">
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" />
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}" />
+                <Setter Property="FontFamily" Value="OpenSansRegular"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="BorderWidth" Value="0"/>
+                <Setter Property="CornerRadius" Value="4"/>
+                <Setter Property="Padding" Value="16,10"/>
+            </Style>
+
+            <Style x:Key="TertiaryButton" TargetType="Button">
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Black}}" />
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}" />
+                <Setter Property="FontFamily" Value="OpenSansRegular"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="BorderWidth" Value="0"/>
+                <Setter Property="CornerRadius" Value="4"/>
+                <Setter Property="Padding" Value="16,10"/>
+            </Style>
+
+            <Style x:Key="CardFrame" TargetType="Frame">
+                <Setter Property="HasShadow" Value="False" />
+                <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}" />
+                <Setter Property="CornerRadius" Value="4" />
+                <Setter Property="Padding" Value="16" />
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray800}}" />
+            </Style>
+
+            <Style x:Key="SectionLabel" TargetType="Label">
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" />
+                <Setter Property="FontSize" Value="16" />
+                <Setter Property="FontAttributes" Value="Bold" />
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Padding="16" RowSpacing="20">
+            <!-- Tarjeta de información principal -->
+            <Frame Grid.Row="0" Style="{StaticResource CardFrame}">
+                <Grid RowDefinitions="Auto,Auto" RowSpacing="16">
+                    <!-- Encabezado -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackLayout Spacing="4">
+                            <Label Text="{Binding Vehiculo.NumeroPlaca}" 
+                                   FontSize="24" 
+                                   FontAttributes="Bold"/>
+                            <Label Text="{Binding Vehiculo.NumeroInterno, StringFormat='Número Interno: {0}'}" 
+                                   FontSize="16" 
+                                   TextColor="{StaticResource Gray500}"/>
+                        </StackLayout>
+
+                        <!-- Foto/imagen del vehículo -->
+                        <Border Grid.Column="1" 
+                                WidthRequest="80" 
+                                HeightRequest="80"
+                                StrokeShape="RoundRectangle 8"
+                                StrokeThickness="0"
+                                BackgroundColor="{StaticResource Gray200}">
+                            <Image Source="directions_bus.png" 
+                                   WidthRequest="50" 
+                                   HeightRequest="50" 
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"/>
+                        </Border>
+                    </Grid>
+
+                    <!-- Información general -->
+                    <Grid Grid.Row="1" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="12">
+                        <!-- Columna izquierda -->
+                        <StackLayout Grid.Column="0" Grid.Row="0" Spacing="2">
+                            <Label Text="Marca" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                            <Label Text="{Binding Vehiculo.Marca}" FontSize="16"/>
+                        </StackLayout>
+
+                        <StackLayout Grid.Column="0" Grid.Row="1" Spacing="2">
+                            <Label Text="Modelo" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                            <Label Text="{Binding Vehiculo.Modelo}" FontSize="16"/>
+                        </StackLayout>
+
+                        <StackLayout Grid.Column="0" Grid.Row="2" Spacing="2">
+                            <Label Text="Año" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                            <Label Text="{Binding Vehiculo.Anio}" FontSize="16"/>
+                        </StackLayout>
+
+                        <StackLayout Grid.Column="0" Grid.Row="3" Spacing="2">
+                            <Label Text="Color" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                            <Label Text="{Binding Vehiculo.Color}" FontSize="16"/>
+                        </StackLayout>
+
+                        <!-- Columna derecha -->
+                        <StackLayout Grid.Column="1" Grid.Row="0" Spacing="2">
+                            <Label Text="Propietario" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                            <Label Text="{Binding Vehiculo.Propietario}" FontSize="16"/>
+                        </StackLayout>
+
+                        <StackLayout Grid.Column="1" Grid.Row="1" Spacing="2">
+                            <Label Text="Número de Serie" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                            <Label Text="{Binding Vehiculo.NumeroSerie}" FontSize="16"/>
+                        </StackLayout>
+
+                        <StackLayout Grid.Column="1" Grid.Row="2" Spacing="2">
+                            <Label Text="Número de Motor" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                            <Label Text="{Binding Vehiculo.NumeroMotor}" FontSize="16"/>
+                        </StackLayout>
+                    </Grid>
+                </Grid>
+            </Frame>
+
+            <!-- Historial de repuestos -->
+            <StackLayout Grid.Row="1">
+                <Label Text="Historial de Repuestos" Style="{StaticResource SectionLabel}" Margin="0,0,0,10"/>
+
+                <StackLayout IsVisible="{Binding IsHistorialEmpty}">
+                    <Label Text="Sin repuestos registrados para este vehículo" 
+                           TextColor="{StaticResource Gray500}" 
+                           HorizontalOptions="Center" 
+                           Margin="0,20"/>
+                </StackLayout>
+
+                <CollectionView ItemsSource="{Binding HistorialRepuestos}" 
+                                IsVisible="{Binding IsHistorialEmpty, Converter={StaticResource InvertedBoolConverter}}"
+                                HeightRequest="300">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Margin="0,4" Padding="12" Style="{StaticResource CardFrame}">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                    <!-- Información de transacción -->
+                                    <StackLayout Grid.Column="0" Spacing="2">
+                                        <Label Text="{Binding RepuestoNombre}" FontSize="16" FontAttributes="Bold"/>
+                                        <Label Text="{Binding RepuestoCodigo}" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                                        <StackLayout Orientation="Horizontal" Spacing="8">
+                                            <Label Text="{Binding Cantidad, StringFormat='Cantidad: {0}'}" FontSize="13"/>
+                                            <Label Text="{Binding PrecioUnitario, StringFormat='Precio: ${0:N2}'}" FontSize="13"/>
+                                        </StackLayout>
+                                    </StackLayout>
+
+                                    <!-- Fecha -->
+                                    <StackLayout Grid.Column="1" VerticalOptions="Center">
+                                        <Label Text="{Binding Fecha, StringFormat='{0:dd/MM/yyyy}'}" FontSize="13" TextColor="{StaticResource Gray500}"/>
+                                    </StackLayout>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </StackLayout>
+
+            <!-- Botones de acción -->
+            <StackLayout Grid.Row="2" Orientation="Horizontal" Spacing="12" HorizontalOptions="Center">
+                <Button Text="Registrar Repuesto" 
+                        Command="{Binding RegistrarRepuestoCommand}" 
+                        Style="{StaticResource PrimaryButton}"/>
+
+                <Button Text="Editar Vehículo" 
+                        Command="{Binding EditarCommand}" 
+                        Style="{StaticResource SecondaryButton}"/>
+            </StackLayout>
+        </Grid>
+    </ScrollView>
+</ContentPage>
