@@ -4,43 +4,27 @@ namespace AppInventariCor.Views
 {
     public partial class NuevaTransaccionPage : ContentPage
     {
-        private NuevaTransaccionViewModel viewModel;
+        private NuevaTransaccionViewModel _viewModel;
 
         public NuevaTransaccionPage()
         {
             InitializeComponent();
-            viewModel = new NuevaTransaccionViewModel();
-            BindingContext = viewModel;
+            _viewModel = new NuevaTransaccionViewModel();
+            BindingContext = _viewModel;
         }
 
+        // Para depuración, podemos añadir este método para monitorear cambios 
+        // en la selección del vehículo cuando la página aparece
         protected override void OnAppearing()
         {
             base.OnAppearing();
-            // Código adicional que se ejecuta cuando la página aparece
-        }
 
-        protected override bool OnBackButtonPressed()
-        {
-            // Mostrar alerta de confirmación si el usuario intenta salir durante el proceso
-            if (viewModel.CurrentStep > 1)
+            if (_viewModel != null)
             {
-                Device.BeginInvokeOnMainThread(async () =>
-                {
-                    bool respuesta = await DisplayAlert(
-                        "Confirmar",
-                        "¿Estás seguro que deseas cancelar la transacción actual?",
-                        "Sí, cancelar",
-                        "No, continuar");
-
-                    if (respuesta)
-                    {
-                        await Navigation.PopAsync();
-                    }
-                });
-                return true;
+                System.Diagnostics.Debug.WriteLine($"[NuevaTransaccionPage] OnAppearing - Estado de selección: " +
+                    $"Vehículo={_viewModel.SelectedVehiculo?.NumeroPlaca ?? "ninguno"}, " +
+                    $"Repuesto={_viewModel.SelectedRepuesto?.Nombre ?? "ninguno"}");
             }
-
-            return base.OnBackButtonPressed();
         }
     }
 }

@@ -22,13 +22,13 @@ namespace AppInventariCor.ViewModels
         private ObservableCollection<Vehiculo> _vehiculosFiltrados;
         private Vehiculo _selectedVehiculo;
 
-        // Propiedades para selección de repuesto (Paso 2)
+        // Propiedades para selección de repuesto (Paso 2) - MODIFICADO para selección múltiple
         private string _repuestoSearchQuery;
         private ObservableCollection<Repuesto> _repuestosFiltrados;
-        private Repuesto _selectedRepuesto;
+        private ObservableCollection<Repuesto> _selectedRepuestos;
 
         // Propiedades para datos específicos (Paso 3)
-        private string _cantidadTransaccion;
+        private Dictionary<int, int> _cantidadesRepuestos; // Mapa de ID de repuesto a cantidad
         private decimal _precioUnitario;
         private string _observaciones;
 
@@ -58,6 +58,8 @@ namespace AppInventariCor.ViewModels
                     OnPropertyChanged(nameof(IsStep5Visible));
                     OnPropertyChanged(nameof(CanGoBack));
                     OnPropertyChanged(nameof(CanGoForward));
+
+                    Debug.WriteLine($"[DEBUG] Cambiado a paso {value}. CanGoForward={CanGoForward}");
                 }
             }
         }
@@ -71,7 +73,7 @@ namespace AppInventariCor.ViewModels
                 return CurrentStep switch
                 {
                     1 => "Selección de Vehículo",
-                    2 => "Selección de Repuesto",
+                    2 => "Selección de Repuestos",
                     3 => "Detalles de Venta",
                     4 => "Evidencia Fotográfica",
                     5 => "Confirmación",
@@ -89,7 +91,15 @@ namespace AppInventariCor.ViewModels
 
         // Navegación
         public bool CanGoBack => CurrentStep > 1;
-        public bool CanGoForward => CurrentStep < _totalSteps && ValidateCurrentStep();
+        public bool CanGoForward
+        {
+            get
+            {
+                bool result = CurrentStep < _totalSteps && ValidateCurrentStep();
+                Debug.WriteLine($"[DEBUG] Evaluando CanGoForward: {result}");
+                return result;
+            }
+        }
 
         // Propiedades para selección de vehículo (Paso 1)
         public string VehiculoSearchQuery
@@ -113,10 +123,22 @@ namespace AppInventariCor.ViewModels
         public Vehiculo SelectedVehiculo
         {
             get => _selectedVehiculo;
-            set => SetProperty(ref _selectedVehiculo, value);
+            set
+            {
+                if (_selectedVehiculo != value)
+                {
+                    _selectedVehiculo = value;
+                    Debug.WriteLine($"[DEBUG] Vehículo seleccionado: {value?.NumeroPlaca ?? "ninguno"}, ID: {value?.Id.ToString() ?? "N/A"}");
+                    OnPropertyChanged(nameof(SelectedVehiculo));
+                    OnPropertyChanged(nameof(CanGoForward));
+
+                    // Forzar actualización del estado visual
+                    OnPropertyChanged(string.Empty);
+                }
+            }
         }
 
-        // Propiedades para selección de repuesto (Paso 2)
+        // Propiedades para selección de repuesto (Paso 2) - MODIFICADO para selección múltiple
         public string RepuestoSearchQuery
         {
             get => _repuestoSearchQuery;
@@ -135,33 +157,21 @@ namespace AppInventariCor.ViewModels
             set => SetProperty(ref _repuestosFiltrados, value);
         }
 
-        public Repuesto SelectedRepuesto
+        // Nueva propiedad para selección múltiple de repuestos
+        public ObservableCollection<Repuesto> SelectedRepuestos
         {
-            get => _selectedRepuesto;
-            set
-            {
-                if (SetProperty(ref _selectedRepuesto, value) && value != null)
-                {
-                    // Cuando se selecciona un repuesto, inicializar precio con valor del repuesto
-                    PrecioUnitario = value.Precio;
-                }
-            }
+            get => _selectedRepuestos;
+            set => SetProperty(ref _selectedRepuestos, value);
         }
 
-        // Propiedades para datos específicos (Paso 3)
-        public string CantidadTransaccion
-        {
-            get => _cantidadTransaccion;
-            set
-            {
-                if (SetProperty(ref _cantidadTransaccion, value))
-                {
-                    OnPropertyChanged(nameof(ValorTotal));
+        // Propiedad para determinar si hay repuestos seleccionados
+        public bool HasSelectedRepuestos => SelectedRepuestos != null && SelectedRepuestos.Count > 0;
 
-                    // Verificar si debemos mostrar advertencia de stock
-                    CheckStockWarning();
-                }
-            }
+        // Propiedades para datos específicos (Paso 3)
+        public Dictionary<int, int> CantidadesRepuestos
+        {
+            get => _cantidadesRepuestos;
+            set => SetProperty(ref _cantidadesRepuestos, value);
         }
 
         public decimal PrecioUnitario
@@ -212,11 +222,20 @@ namespace AppInventariCor.ViewModels
         {
             get
             {
-                if (string.IsNullOrEmpty(_cantidadTransaccion) || !int.TryParse(_cantidadTransaccion, out int cantidad))
+                decimal total = 0;
+
+                if (SelectedRepuestos != null && CantidadesRepuestos != null)
                 {
-                    return 0;
+                    foreach (var repuesto in SelectedRepuestos)
+                    {
+                        if (CantidadesRepuestos.TryGetValue(repuesto.Id, out int cantidad))
+                        {
+                            total += repuesto.Precio * cantidad;
+                        }
+                    }
                 }
-                return _precioUnitario * cantidad;
+
+                return total;
             }
         }
 
@@ -236,12 +255,18 @@ namespace AppInventariCor.ViewModels
         public ICommand NextStepCommand { get; }
         public ICommand VehiculoSearchCommand { get; }
         public ICommand RepuestoSearchCommand { get; }
+        public ICommand SelectVehiculoCommand { get; }
+        public ICommand ToggleRepuestoCommand { get; }
+        public ICommand RemoveRepuestoCommand { get; }
         public ICommand ScanCommand { get; }
         public ICommand TakePictureCommand { get; }
         public ICommand PickImageCommand { get; }
         public ICommand RemoveImageCommand { get; }
         public ICommand ClearSignatureCommand { get; }
         public ICommand ConfirmTransactionCommand { get; }
+        public ICommand UpdateCantidadCommand { get; }
+        public ICommand IncrementarCantidadCommand { get; }
+        public ICommand DecrementarCantidadCommand { get; }
         #endregion
 
         // Constructor
@@ -252,6 +277,8 @@ namespace AppInventariCor.ViewModels
             // Inicializar colecciones
             _vehiculosFiltrados = new ObservableCollection<Vehiculo>();
             _repuestosFiltrados = new ObservableCollection<Repuesto>();
+            _selectedRepuestos = new ObservableCollection<Repuesto>();
+            _cantidadesRepuestos = new Dictionary<int, int>();
             _evidenceImages = new ObservableCollection<ImageSource>();
 
             // Inicializar comandos
@@ -259,12 +286,18 @@ namespace AppInventariCor.ViewModels
             NextStepCommand = new Command(NextStep);
             VehiculoSearchCommand = new Command(SearchVehiculos);
             RepuestoSearchCommand = new Command(SearchRepuestos);
+            SelectVehiculoCommand = new Command<Vehiculo>(SelectVehiculo);
+            ToggleRepuestoCommand = new Command<Repuesto>(ToggleRepuestoSelection);
+            RemoveRepuestoCommand = new Command<Repuesto>(RemoveRepuesto);
             ScanCommand = new Command(ScanRepuesto);
             TakePictureCommand = new Command(TakePicture);
             PickImageCommand = new Command(PickImage);
             RemoveImageCommand = new Command<ImageSource>(RemoveImage);
             ClearSignatureCommand = new Command(ClearSignature);
             ConfirmTransactionCommand = new Command(ConfirmTransaction);
+            UpdateCantidadCommand = new Command<Tuple<Repuesto, string>>(UpdateCantidad);
+            IncrementarCantidadCommand = new Command<Repuesto>(IncrementarCantidad);
+            DecrementarCantidadCommand = new Command<Repuesto>(DecrementarCantidad);
 
             // Cargar datos iniciales
             LoadInitialData();
@@ -282,25 +315,29 @@ namespace AppInventariCor.ViewModels
                 var vehiculos = await VehiculoJson.ObtenerVehiculos();
                 if (vehiculos != null && vehiculos.Any())
                 {
+                    VehiculosFiltrados.Clear();
                     foreach (var vehiculo in vehiculos.Take(10))
                     {
                         VehiculosFiltrados.Add(vehiculo);
                     }
+                    Debug.WriteLine($"[DEBUG] Cargados {VehiculosFiltrados.Count} vehículos");
                 }
 
                 // Precargar algunos repuestos para el segundo paso
                 var repuestos = await RepuestoJson.ObtenerRepuestos();
                 if (repuestos != null && repuestos.Any())
                 {
+                    RepuestosFiltrados.Clear();
                     foreach (var repuesto in repuestos.Where(r => r.Disponible).Take(10))
                     {
                         RepuestosFiltrados.Add(repuesto);
                     }
+                    Debug.WriteLine($"[DEBUG] Cargados {RepuestosFiltrados.Count} repuestos");
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NuevaTransaccionViewModel] Error en LoadInitialData: {ex.Message}");
+                Debug.WriteLine($"[ERROR] Error en LoadInitialData: {ex.Message}");
                 await Application.Current.MainPage.DisplayAlert(
                     "Error",
                     "Ocurrió un error al cargar los datos iniciales: " + ex.Message,
@@ -322,9 +359,122 @@ namespace AppInventariCor.ViewModels
 
         private void NextStep()
         {
-            if (ValidateCurrentStep() && CurrentStep < _totalSteps)
+            Debug.WriteLine($"[DEBUG] Intentando avanzar al siguiente paso. Paso actual: {CurrentStep}");
+
+            if (ValidateCurrentStep())
             {
-                CurrentStep++;
+                Debug.WriteLine("[DEBUG] Validación exitosa, avanzando al siguiente paso");
+
+                // Acciones especiales según el paso
+                if (CurrentStep == 2)
+                {
+                    // Inicializar cantidades para repuestos seleccionados
+                    InitializeCantidades();
+                }
+
+                if (CurrentStep < _totalSteps)
+                {
+                    CurrentStep++;
+                }
+            }
+            else
+            {
+                Debug.WriteLine("[DEBUG] Validación fallida, no se puede avanzar");
+                string mensaje = "Por favor complete todos los campos requeridos para continuar.";
+
+                // Mensajes específicos según el paso
+                if (CurrentStep == 1 && SelectedVehiculo == null)
+                {
+                    mensaje = "Por favor seleccione un vehículo para continuar.";
+                }
+                else if (CurrentStep == 2 && (SelectedRepuestos == null || SelectedRepuestos.Count == 0))
+                {
+                    mensaje = "Por favor seleccione al menos un repuesto para continuar.";
+                }
+
+                Application.Current.MainPage.DisplayAlert("Validación", mensaje, "OK");
+            }
+        }
+
+        private void InitializeCantidades()
+        {
+            // Inicializar diccionario de cantidades para cada repuesto seleccionado
+            foreach (var repuesto in SelectedRepuestos)
+            {
+                if (!CantidadesRepuestos.ContainsKey(repuesto.Id))
+                {
+                    CantidadesRepuestos[repuesto.Id] = 1; // Valor predeterminado
+                }
+            }
+
+            OnPropertyChanged(nameof(ValorTotal));
+        }
+
+        private void UpdateCantidad(Tuple<Repuesto, string> data)
+        {
+            if (data == null || data.Item1 == null || string.IsNullOrEmpty(data.Item2))
+                return;
+
+            var repuesto = data.Item1;
+            var cantidadStr = data.Item2;
+
+            if (int.TryParse(cantidadStr, out int cantidad) && cantidad > 0)
+            {
+                // Validar que no exceda el stock
+                if (cantidad <= repuesto.Cantidad)
+                {
+                    CantidadesRepuestos[repuesto.Id] = cantidad;
+                    OnPropertyChanged(nameof(ValorTotal));
+                    OnPropertyChanged(nameof(CanGoForward));
+                    CheckStockWarning();
+                }
+                else
+                {
+                    // Ajustar al máximo disponible
+                    CantidadesRepuestos[repuesto.Id] = repuesto.Cantidad;
+                    OnPropertyChanged(nameof(ValorTotal));
+
+                    // Notificar al usuario
+                    Application.Current.MainPage.DisplayAlert(
+                        "Advertencia",
+                        $"La cantidad solicitada excede el stock disponible ({repuesto.Cantidad}). Se ha ajustado al máximo disponible.",
+                        "OK");
+                }
+            }
+        }
+
+        private void IncrementarCantidad(Repuesto repuesto)
+        {
+            if (repuesto == null || !CantidadesRepuestos.TryGetValue(repuesto.Id, out int cantidadActual))
+                return;
+
+            // Validar que no exceda el stock
+            if (cantidadActual < repuesto.Cantidad)
+            {
+                CantidadesRepuestos[repuesto.Id] = cantidadActual + 1;
+                OnPropertyChanged(nameof(ValorTotal));
+                CheckStockWarning();
+            }
+            else
+            {
+                // Notificar al usuario que ha alcanzado el máximo
+                Application.Current.MainPage.DisplayAlert(
+                    "Información",
+                    $"No se puede aumentar más la cantidad. El stock disponible es {repuesto.Cantidad}.",
+                    "OK");
+            }
+        }
+
+        private void DecrementarCantidad(Repuesto repuesto)
+        {
+            if (repuesto == null || !CantidadesRepuestos.TryGetValue(repuesto.Id, out int cantidadActual))
+                return;
+
+            if (cantidadActual > 1)
+            {
+                CantidadesRepuestos[repuesto.Id] = cantidadActual - 1;
+                OnPropertyChanged(nameof(ValorTotal));
+                CheckStockWarning();
             }
         }
 
@@ -334,25 +484,40 @@ namespace AppInventariCor.ViewModels
             switch (CurrentStep)
             {
                 case 1: // Selección de vehículo
-                    return SelectedVehiculo != null;
+                    bool step1Valid = SelectedVehiculo != null;
+                    Debug.WriteLine($"[DEBUG] Validación paso 1: {step1Valid}, Vehículo: {SelectedVehiculo?.NumeroPlaca ?? "ninguno"}");
+                    return step1Valid;
 
-                case 2: // Selección de repuesto
-                    return SelectedRepuesto != null && SelectedRepuesto.Disponible;
+                case 2: // Selección de repuestos - MODIFICADO para selección múltiple
+                    bool step2Valid = SelectedRepuestos != null && SelectedRepuestos.Count > 0;
+                    Debug.WriteLine($"[DEBUG] Validación paso 2: {step2Valid}, Repuestos seleccionados: {SelectedRepuestos?.Count ?? 0}");
+                    return step2Valid;
 
-                case 3: // Detalles de venta
-                    if (string.IsNullOrWhiteSpace(CantidadTransaccion))
-                        return false;
-
-                    if (!int.TryParse(CantidadTransaccion, out int cantidad) || cantidad <= 0)
-                        return false;
-
-                    // Verificar que no exceda el stock disponible
-                    if (SelectedRepuesto != null)
+                case 3: // Detalles de venta - MODIFICADO para múltiples repuestos
+                    if (CantidadesRepuestos == null || SelectedRepuestos == null)
                     {
-                        return cantidad <= SelectedRepuesto.Cantidad;
+                        Debug.WriteLine("[DEBUG] Validación paso 3: false - Datos de cantidades no inicializados");
+                        return false;
                     }
 
-                    return false;
+                    // Verificar que todas las cantidades sean válidas
+                    foreach (var repuesto in SelectedRepuestos)
+                    {
+                        if (!CantidadesRepuestos.TryGetValue(repuesto.Id, out int cantidad) || cantidad <= 0)
+                        {
+                            Debug.WriteLine($"[DEBUG] Validación paso 3: false - Cantidad inválida para repuesto {repuesto.Codigo}");
+                            return false;
+                        }
+
+                        // Verificar stock disponible
+                        if (cantidad > repuesto.Cantidad)
+                        {
+                            Debug.WriteLine($"[DEBUG] Validación paso 3: false - Cantidad excede stock para repuesto {repuesto.Codigo}");
+                            return false;
+                        }
+                    }
+
+                    return true;
 
                 case 4: // Evidencia fotográfica
                     // No hay validación específica, la evidencia es opcional
@@ -360,6 +525,84 @@ namespace AppInventariCor.ViewModels
 
                 default:
                     return true;
+            }
+        }
+
+        // Método para seleccionar vehículo
+        private void SelectVehiculo(Vehiculo vehiculo)
+        {
+            Debug.WriteLine($"[DEBUG] Método SelectVehiculo llamado con: {vehiculo?.NumeroPlaca ?? "ninguno"}");
+            if (vehiculo != null)
+            {
+                SelectedVehiculo = vehiculo;
+
+                // Forzar actualización del estado de navegación
+                OnPropertyChanged(nameof(CanGoForward));
+            }
+        }
+
+        // Método para alternar la selección de un repuesto
+        private void ToggleRepuestoSelection(Repuesto repuesto)
+        {
+            if (repuesto == null) return;
+
+            // Buscar si el repuesto ya está seleccionado
+            bool isSelected = SelectedRepuestos.Any(r => r.Id == repuesto.Id);
+
+            if (isSelected)
+            {
+                // Quitar de la selección
+                var itemToRemove = SelectedRepuestos.FirstOrDefault(r => r.Id == repuesto.Id);
+                if (itemToRemove != null)
+                {
+                    SelectedRepuestos.Remove(itemToRemove);
+
+                    // Quitar del diccionario de cantidades
+                    if (CantidadesRepuestos.ContainsKey(repuesto.Id))
+                    {
+                        CantidadesRepuestos.Remove(repuesto.Id);
+                    }
+                }
+            }
+            else
+            {
+                // Añadir a la selección
+                SelectedRepuestos.Add(repuesto);
+
+                // Inicializar cantidad por defecto
+                CantidadesRepuestos[repuesto.Id] = 1;
+            }
+
+            Debug.WriteLine($"[DEBUG] Repuesto {repuesto.Codigo} {(isSelected ? "quitado de" : "añadido a")} la selección. Total: {SelectedRepuestos.Count}");
+
+            // Actualizar propiedades relacionadas
+            OnPropertyChanged(nameof(HasSelectedRepuestos));
+            OnPropertyChanged(nameof(CanGoForward));
+            OnPropertyChanged(nameof(ValorTotal));
+        }
+
+        // Método para quitar un repuesto de la selección
+        private void RemoveRepuesto(Repuesto repuesto)
+        {
+            if (repuesto == null) return;
+
+            var itemToRemove = SelectedRepuestos.FirstOrDefault(r => r.Id == repuesto.Id);
+            if (itemToRemove != null)
+            {
+                SelectedRepuestos.Remove(itemToRemove);
+
+                // Quitar del diccionario de cantidades
+                if (CantidadesRepuestos.ContainsKey(repuesto.Id))
+                {
+                    CantidadesRepuestos.Remove(repuesto.Id);
+                }
+
+                Debug.WriteLine($"[DEBUG] Repuesto {repuesto.Codigo} quitado de la selección. Total: {SelectedRepuestos.Count}");
+
+                // Actualizar propiedades relacionadas
+                OnPropertyChanged(nameof(HasSelectedRepuestos));
+                OnPropertyChanged(nameof(CanGoForward));
+                OnPropertyChanged(nameof(ValorTotal));
             }
         }
 
@@ -389,10 +632,12 @@ namespace AppInventariCor.ViewModels
                 {
                     VehiculosFiltrados.Add(vehiculo);
                 }
+
+                Debug.WriteLine($"[DEBUG] Búsqueda completada: {VehiculosFiltrados.Count} vehículos encontrados");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NuevaTransaccionViewModel] Error en SearchVehiculos: {ex.Message}");
+                Debug.WriteLine($"[ERROR] Error en SearchVehiculos: {ex.Message}");
             }
             finally
             {
@@ -425,10 +670,12 @@ namespace AppInventariCor.ViewModels
                 {
                     RepuestosFiltrados.Add(repuesto);
                 }
+
+                Debug.WriteLine($"[DEBUG] Búsqueda completada: {RepuestosFiltrados.Count} repuestos encontrados");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NuevaTransaccionViewModel] Error en SearchRepuestos: {ex.Message}");
+                Debug.WriteLine($"[ERROR] Error en SearchRepuestos: {ex.Message}");
             }
             finally
             {
@@ -438,20 +685,26 @@ namespace AppInventariCor.ViewModels
 
         private void CheckStockWarning()
         {
-            if (SelectedRepuesto == null || string.IsNullOrWhiteSpace(CantidadTransaccion))
+            if (SelectedRepuestos == null || CantidadesRepuestos == null)
             {
                 ShowStockWarning = false;
                 return;
             }
 
-            if (int.TryParse(CantidadTransaccion, out int cantidad))
+            // Verificar si algún repuesto quedará con stock bajo
+            ShowStockWarning = false;
+
+            foreach (var repuesto in SelectedRepuestos)
             {
-                int stockRestante = SelectedRepuesto.Cantidad - cantidad;
-                ShowStockWarning = stockRestante < SelectedRepuesto.StockMinimo && stockRestante >= 0;
-            }
-            else
-            {
-                ShowStockWarning = false;
+                if (CantidadesRepuestos.TryGetValue(repuesto.Id, out int cantidad))
+                {
+                    int stockRestante = repuesto.Cantidad - cantidad;
+                    if (stockRestante < repuesto.StockMinimo && stockRestante >= 0)
+                    {
+                        ShowStockWarning = true;
+                        break;
+                    }
+                }
             }
         }
 
@@ -466,7 +719,17 @@ namespace AppInventariCor.ViewModels
             // Simulamos encontrar un repuesto (en una implementación real, buscaríamos por el código escaneado)
             if (RepuestosFiltrados.Any())
             {
-                SelectedRepuesto = RepuestosFiltrados.First();
+                var repuesto = RepuestosFiltrados.First();
+
+                // Agregar a seleccionados si no está ya
+                if (!SelectedRepuestos.Any(r => r.Id == repuesto.Id))
+                {
+                    SelectedRepuestos.Add(repuesto);
+                    CantidadesRepuestos[repuesto.Id] = 1;
+
+                    OnPropertyChanged(nameof(HasSelectedRepuestos));
+                    OnPropertyChanged(nameof(CanGoForward));
+                }
             }
         }
 
@@ -521,7 +784,7 @@ namespace AppInventariCor.ViewModels
                 IsBusy = true;
 
                 // Validar que tengamos los datos mínimos necesarios
-                if (SelectedVehiculo == null || SelectedRepuesto == null || string.IsNullOrWhiteSpace(CantidadTransaccion))
+                if (SelectedVehiculo == null || SelectedRepuestos == null || SelectedRepuestos.Count == 0)
                 {
                     await Application.Current.MainPage.DisplayAlert(
                         "Error",
@@ -530,62 +793,79 @@ namespace AppInventariCor.ViewModels
                     return;
                 }
 
-                // Convertir la cantidad
-                if (!int.TryParse(CantidadTransaccion, out int cantidad) || cantidad <= 0)
+                // Lista para almacenar las transacciones creadas
+                var transaccionesCreadas = new List<bool>();
+
+                // Crear una transacción para cada repuesto seleccionado
+                foreach (var repuesto in SelectedRepuestos)
                 {
-                    await Application.Current.MainPage.DisplayAlert(
-                        "Error",
-                        "La cantidad debe ser un número positivo.",
-                        "OK");
-                    return;
+                    // Obtener la cantidad para este repuesto
+                    if (!CantidadesRepuestos.TryGetValue(repuesto.Id, out int cantidad) || cantidad <= 0)
+                    {
+                        continue; // Saltar este repuesto si no tiene cantidad válida
+                    }
+
+                    // Verificar stock disponible
+                    if (cantidad > repuesto.Cantidad)
+                    {
+                        await Application.Current.MainPage.DisplayAlert(
+                            "Error",
+                            $"No hay suficiente stock disponible para el repuesto {repuesto.Nombre} (Código: {repuesto.Codigo}).",
+                            "OK");
+                        continue;
+                    }
+
+                    // Calcular cantidades para historial
+                    int cantidadAnterior = repuesto.Cantidad;
+                    int cantidadPosterior = cantidadAnterior - cantidad;
+                    decimal valorTotal = repuesto.Precio * cantidad;
+
+                    // Crear objeto de transacción
+                    var transaccion = new Transaccion
+                    {
+                        Fecha = DateTime.Now,
+                        Tipo = TipoTransaccion.Salida,
+                        Cantidad = cantidad,
+                        CantidadAnterior = cantidadAnterior,
+                        CantidadPosterior = cantidadPosterior,
+                        PrecioUnitario = repuesto.Precio,
+                        ValorTotal = valorTotal,
+                        Observaciones = Observaciones,
+                        RepuestoId = repuesto.Id,
+                        RepuestoCodigo = repuesto.Codigo,
+                        RepuestoNombre = repuesto.Nombre,
+                        VehiculoId = SelectedVehiculo.Id,
+                        VehiculoPlaca = SelectedVehiculo.NumeroPlaca,
+                        ResponsableNombre = "Usuario Actual", // En una implementación real, obtendríamos el usuario logueado
+                        FechaCreacion = DateTime.Now
+                    };
+
+                    // Actualizar el inventario (reducir stock)
+                    repuesto.Cantidad = cantidadPosterior;
+                    await RepuestoJson.ActualizarRepuesto(repuesto);
+
+                    // Guardar la transacción
+                    bool resultado = await TransaccionJson.AgregarTransaccion(transaccion);
+                    transaccionesCreadas.Add(resultado);
                 }
 
-                // Verificar stock disponible
-                if (cantidad > SelectedRepuesto.Cantidad)
-                {
-                    await Application.Current.MainPage.DisplayAlert(
-                        "Error",
-                        "No hay suficiente stock disponible para esta transacción.",
-                        "OK");
-                    return;
-                }
-
-                // Calcular cantidades para historial
-                int cantidadAnterior = SelectedRepuesto.Cantidad;
-                int cantidadPosterior = cantidadAnterior - cantidad;
-
-                // Crear objeto de transacción
-                var transaccion = new Transaccion
-                {
-                    Fecha = DateTime.Now,
-                    Tipo = TipoTransaccion.Salida,
-                    Cantidad = cantidad,
-                    CantidadAnterior = cantidadAnterior,
-                    CantidadPosterior = cantidadPosterior,
-                    PrecioUnitario = PrecioUnitario,
-                    ValorTotal = ValorTotal,
-                    Observaciones = Observaciones,
-                    RepuestoId = SelectedRepuesto.Id,
-                    RepuestoCodigo = SelectedRepuesto.Codigo,
-                    RepuestoNombre = SelectedRepuesto.Nombre,
-                    VehiculoId = SelectedVehiculo.Id,
-                    VehiculoPlaca = SelectedVehiculo.NumeroPlaca,
-                    ResponsableNombre = "Usuario Actual", // En una implementación real, obtendríamos el usuario logueado
-                    FechaCreacion = DateTime.Now
-                };
-
-                // Actualizar el inventario (reducir stock)
-                SelectedRepuesto.Cantidad = cantidadPosterior;
-                await RepuestoJson.ActualizarRepuesto(SelectedRepuesto);
-
-                // Guardar la transacción
-                bool resultado = await TransaccionJson.AgregarTransaccion(transaccion);
-
-                if (resultado)
+                // Verificar si todas las transacciones se guardaron correctamente
+                if (transaccionesCreadas.Count > 0 && transaccionesCreadas.All(t => t))
                 {
                     await Application.Current.MainPage.DisplayAlert(
                         "Éxito",
-                        "Venta registrada correctamente",
+                        $"Se han registrado {transaccionesCreadas.Count} transacciones correctamente.",
+                        "OK");
+
+                    // Volver a la página anterior
+                    await Shell.Current.GoToAsync("..");
+                }
+                else if (transaccionesCreadas.Count > 0)
+                {
+                    // Algunas transacciones se guardaron, otras no
+                    await Application.Current.MainPage.DisplayAlert(
+                        "Advertencia",
+                        $"Se registraron {transaccionesCreadas.Count(t => t)} de {transaccionesCreadas.Count} transacciones. Algunas tuvieron errores.",
                         "OK");
 
                     // Volver a la página anterior
@@ -595,16 +875,16 @@ namespace AppInventariCor.ViewModels
                 {
                     await Application.Current.MainPage.DisplayAlert(
                         "Error",
-                        "No se pudo registrar la venta",
+                        "No se pudo registrar ninguna transacción. Por favor intente nuevamente.",
                         "OK");
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[NuevaTransaccionViewModel] Error en ConfirmTransaction: {ex.Message}");
+                Debug.WriteLine($"[ERROR] Error en ConfirmTransaction: {ex.Message}");
                 await Application.Current.MainPage.DisplayAlert(
                     "Error",
-                    "Ocurrió un error al registrar la venta: " + ex.Message,
+                    "Ocurrió un error al registrar las transacciones: " + ex.Message,
                     "OK");
             }
             finally
